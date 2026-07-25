@@ -26,6 +26,11 @@ const CELEBRATE_MS = 2200;
  * 팝업이 곧바로 덮으면 "왜 위험한지"를 보여주는 장면이 통째로 가려진다.
  */
 const ABORT_MS = 1400;
+/**
+ * 헬멧을 쓰고 횡단보도 앞에 다시 선 모습을 보여준 뒤 성공 팝업이 뜨기까지.
+ * 곧바로 덮으면 정작 보여주려던 장면을 아무도 못 본다.
+ */
+const HELMET_ON_MS = 1600;
 
 const BUBBLE_TEXT = {
   idle: "Let's cross safely! Wait for the green light.",
@@ -55,6 +60,8 @@ export function GamePage() {
   const [choice, setChoice] = useState<SignalChoice | null>(null);
   const [showRetry, setShowRetry] = useState(false);
   const [bikeResult, setBikeResult] = useState<"retry" | "success" | null>(null);
+  const [wearsHelmet, setWearsHelmet] = useState(false);
+  const [showBikeSuccess, setShowBikeSuccess] = useState(false);
 
   // 초록을 골랐으면 불이 바뀌는 순간 자동으로 건넌다 — 아이가 같은 판단을 두 번
   // 하게 만들지 않는다. 기계에 새 단계를 넣는 대신 기존 walk() 를 부른다.
@@ -77,6 +84,13 @@ export function GamePage() {
     return () => clearTimeout(t);
   }, [phase]);
 
+  // 헬멧 쓴 모습을 먼저 보여주고 나서 축하 팝업을 띄운다.
+  useEffect(() => {
+    if (bikeResult !== "success") return;
+    const t = setTimeout(() => setShowBikeSuccess(true), HELMET_ON_MS);
+    return () => clearTimeout(t);
+  }, [bikeResult]);
+
   const handleSignalChoice = (picked: SignalChoice) => {
     setChoice(picked);
     // 초록 → 신호를 바꾼다. 빨강 → 빨간불에 건너려다 멈추는 기존 실패 경로를 탄다.
@@ -91,11 +105,20 @@ export function GamePage() {
   };
 
   const handleBikeChoice = (picked: BikeChoice) => {
-    setBikeResult(picked === "helmet" ? "success" : "retry");
+    if (picked !== "helmet") {
+      setBikeResult("retry");
+      return;
+    }
+    // 헬멧을 씌우고 횡단보도 앞 출발 자리로 돌려보낸다 — 다음 이야기의 시작 자세다.
+    setBikeResult("success");
+    setWearsHelmet(true);
+    reset();
   };
 
   /** 처음부터 다시 — 씬과 팝업 상태를 모두 되돌린다 */
   const handleRestartAll = () => {
+    setWearsHelmet(false);
+    setShowBikeSuccess(false);
     setBikeResult(null);
     setStep(1);
     setChoice(null);
@@ -116,6 +139,7 @@ export function GamePage() {
             dinoY={game.dinoY}
             instant={game.instant}
             dinoColor={DINO_COLOR}
+            wearsHelmet={wearsHelmet}
             crossSeconds={CROSS_SECONDS}
             onWalk={walk}
           />
@@ -157,7 +181,7 @@ export function GamePage() {
         />
       )}
 
-      {step === 2 && bikeResult === "success" && (
+      {step === 2 && showBikeSuccess && (
         <ResultDialog
           tone="success"
           title="Helmet on — well done!"

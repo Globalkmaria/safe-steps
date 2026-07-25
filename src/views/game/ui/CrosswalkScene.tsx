@@ -27,6 +27,8 @@ interface CrosswalkSceneProps {
   dinoY: number;
   instant: boolean;
   dinoColor: string;
+  /** 자전거 스텝을 통과하면 헬멧을 쓴다 */
+  wearsHelmet?: boolean;
   crossSeconds: number;
   onWalk: () => void;
 }
@@ -42,6 +44,7 @@ export function CrosswalkScene({
   dinoY,
   instant,
   dinoColor,
+  wearsHelmet = false,
   crossSeconds,
   onWalk,
 }: CrosswalkSceneProps) {
@@ -61,7 +64,10 @@ export function CrosswalkScene({
   }, []);
 
   const worldFaces = useMemo(() => buildWorld(), []);
-  const dinoFaces = useMemo(() => buildDino(dinoColor), [dinoColor]);
+  const dinoFaces = useMemo(
+    () => buildDino(dinoColor, undefined, wearsHelmet),
+    [dinoColor, wearsHelmet],
+  );
   const { rows, columns } = useMemo(() => signalPixels(isGreen), [isGreen]);
 
   const litColor = isGreen ? "#5cf06a" : "#ff5347";

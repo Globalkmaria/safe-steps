@@ -387,7 +387,12 @@ export function buildWorld(): Face[] {
 export const DINO_BUILD_Y = 15.5;
 
 /** 플레이어 캐릭터(공룡). 몸 색만 파라미터로 받는다. */
-export function buildDino(bodyColor: string, cam: CameraConfig = SCENE_CAMERA): Face[] {
+export function buildDino(
+  bodyColor: string,
+  cam: CameraConfig = SCENE_CAMERA,
+  /** 머리에 헬멧을 씌운다 — 자전거 스텝을 통과한 뒤의 모습 */
+  withHelmet = false,
+): Face[] {
   const faces: Face[] = [];
 
   // 원본 모델은 -y 를 향한다. 진행 방향을 왼쪽→오른쪽으로 뒤집었으므로 캐릭터도
@@ -454,6 +459,41 @@ export function buildDino(bodyColor: string, cam: CameraConfig = SCENE_CAMERA): 
 
   for (const [x, y, z, w, d, h, c] of specs) {
     box(faces, cam, spanX - x - w + 3.6, spanY - y - d + DINO_BUILD_Y, z + 1.2, w, d, h, c);
+  }
+
+  if (withHelmet) {
+    // 머리 상자를 뒤집은 뒤의 실제 위치에 맞춰 씌운다. 좌표를 손으로 적으면 모델이
+    // 바뀔 때 헬멧만 허공에 남으므로, 머리 스펙에서 그때그때 계산한다.
+    const head = specs.find((sp) => sp[3] === 4.6 && sp[4] === 3.3);
+    if (head) {
+      const [hx, hy, hz, hw, hd, hh] = head;
+      const cx = spanX - hx - hw + 3.6 + hw / 2;
+      const cy = spanY - hy - hd + DINO_BUILD_Y + hd / 2;
+      const top = hz + 1.2 + hh;
+
+      const HB = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
+        box(faces, cam, x, y, z, w, d, h, c);
+      const CELL = 0.62;
+      const SHELL = "#c8302c";
+      const SHELL_TOP = "#dc4038";
+
+      // 머리를 덮는 작은 돔 — 정수리에서 아래로 살짝 내려앉게 시작점을 낮춘다
+      for (let i = 0; i < 4; i++) {
+        const r = 2.45 * Math.cos(((i / 4) * Math.PI) / 2.5);
+        const z = top - 0.45 + i * CELL;
+        const steps = Math.ceil(r / CELL) + 1;
+        for (let ix = -steps; ix <= steps; ix++) {
+          for (let iy = -steps; iy <= steps; iy++) {
+            const x = ix * CELL;
+            const y = iy * CELL;
+            if (Math.hypot(x + CELL / 2, y + CELL / 2) > r) continue;
+            HB(cx + x, cy + y, z, CELL, CELL, CELL + 0.04, i > 1 ? SHELL_TOP : SHELL);
+          }
+        }
+      }
+      // 챙 — 캐릭터가 +y 를 보므로 그쪽에 붙인다
+      HB(cx - 1.7, cy + 1.7, top - 0.45, 3.4, 0.8, 0.4, "#c3c9ce");
+    }
   }
 
   faces.sort((a, b) => a.dep - b.dep);
