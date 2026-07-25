@@ -224,9 +224,14 @@ export function buildWorld(): Face[] {
   B(-13, -15.5, 0, 34, 6.5, 0.5, GRASS, undefined, GROUND);
   B(-13, -9, 0, 34, 9, 1.2, WALK, undefined, GROUND);
   B(-13, 14, 0, 34, 8, 1.2, WALK, undefined, GROUND);
-  B(-13, 0, 0, 13, 14, 1.05, ROAD, undefined, GROUND);
-  B(12, 0, 0, 9, 14, 1.05, ROAD, undefined, GROUND);
-  B(0, 0, 0, 12, 14, 1.05, ROAD, stripes, GROUND); // 횡단보도
+  // 도로는 x −13~21 을 세 구간으로 나눠 쓴다: 평범한 도로 / 횡단보도 / 평범한 도로.
+  // 전체 폭은 인도·잔디와 같아야 하므로 고정이고, 경계만 움직여 비율을 바꾼다.
+  // 횡단보도를 넓히면 그만큼 양옆 도로가 줄어든다.
+  const CROSSING_X0 = -9;
+  const CROSSING_X1 = 17;
+  B(-13, 0, 0, CROSSING_X0 - -13, 14, 1.05, ROAD, undefined, GROUND);
+  B(CROSSING_X1, 0, 0, 21 - CROSSING_X1, 14, 1.05, ROAD, undefined, GROUND);
+  B(CROSSING_X0, 0, 0, CROSSING_X1 - CROSSING_X0, 14, 1.05, ROAD, stripes, GROUND); // 횡단보도
   B(-13, 22, 0, 34, 2, 0.5, GRASS, undefined, GROUND);
 
   // 신호등 — 기둥의 수직축을 중심으로 원본에서 90° 돌려세웠다.
