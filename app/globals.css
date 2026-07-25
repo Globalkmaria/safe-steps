@@ -198,3 +198,14 @@ textarea {
     transform: translateX(42%);
   }
 }
+
+/* 엄마 공룡이 손을 흔든다 */
+@keyframes ss-wave {
+  0%,
+  100% {
+    transform: rotate(-14deg);
+  }
+  50% {
+    transform: rotate(16deg);
+  }
+}

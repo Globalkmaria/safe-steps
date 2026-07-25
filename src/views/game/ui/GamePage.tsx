@@ -9,6 +9,7 @@ import { CrossingModeQuiz } from "@/views/game/ui/CrossingModeQuiz";
 import type { CrossingMode } from "@/views/game/ui/CrossingModeQuiz";
 import { SignalQuiz } from "@/views/game/ui/SignalQuiz";
 import type { SignalChoice } from "@/views/game/ui/SignalQuiz";
+import { IntroScreen } from "@/views/game/ui/IntroScreen";
 import { useCrosswalkGame } from "@/views/game/model/use-crosswalk-game";
 
 /** 캐릭터 몸 색. 선택 UI 가 사라져 지금은 고정값이다. */
@@ -60,6 +61,8 @@ export function GamePage() {
 
   const { phase, isGreen, pressButton, walk, tryAgain, reset } = game;
 
+  /** 인트로 — 엄마의 배웅. 여기서 시작해 스텝 1 로 넘어간다. */
+  const [showIntro, setShowIntro] = useState(true);
   const [step, setStep] = useState<Step>(1);
 
   // 스텝 1 — 헬멧
@@ -160,6 +163,7 @@ export function GamePage() {
 
   /** 처음부터 다시 — 씬과 팝업 상태를 모두 되돌린다 */
   const handleRestartAll = () => {
+    setShowIntro(true);
     setStep(1);
     setGearResult(null);
     setShowGearSuccess(false);
@@ -202,8 +206,12 @@ export function GamePage() {
         </p>
       </main>
 
+      {showIntro && <IntroScreen onStart={() => setShowIntro(false)} />}
+
       {/* --- 스텝 1: 자전거를 탈 때 챙길 것 --- */}
-      {step === 1 && gearResult === null && <BikeQuiz onSelect={handleGearChoice} />}
+      {!showIntro && step === 1 && gearResult === null && (
+        <BikeQuiz onSelect={handleGearChoice} />
+      )}
 
       {step === 1 && gearResult === "retry" && (
         <ResultDialog

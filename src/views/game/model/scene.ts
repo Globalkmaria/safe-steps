@@ -187,6 +187,29 @@ export function screenDelta(
 }
 
 /**
+ * 월드의 한 점이 그룹 원점 기준 화면 어디에 찍히는지.
+ * 팔을 어깨에서 돌리려면 transform-origin 을 그 지점에 둬야 한다.
+ */
+export function projectPoint(
+  cam: CameraConfig,
+  x: number,
+  y: number,
+  z: number,
+): { x: number; y: number } {
+  const th = (cam.thetaDeg * Math.PI) / 180;
+  const ph = (cam.phiDeg * Math.PI) / 180;
+  const X = x * UNIT;
+  const Y = -y * UNIT;
+  const Z = z * UNIT;
+  const rx = X * Math.cos(ph) - Y * Math.sin(ph);
+  const ry = X * Math.sin(ph) + Y * Math.cos(ph);
+  return {
+    x: cam.offsetX + cam.scale * rx,
+    y: cam.offsetY + cam.scale * (ry * Math.cos(th) - Z * Math.sin(th)),
+  };
+}
+
+/**
  * 상자 하나를 4개 면으로 펼쳐 out 에 담는다.
  * (x,y,z) 는 월드 좌표, (w,dp,h) 는 가로·깊이·높이.
  */
@@ -394,6 +417,8 @@ export function buildDino(
   withHelmet = false,
   /** 안장에 앉도록 통째로 들어올린다(자전거를 탈 때) */
   lift = 0,
+  /** 엄마 공룡용 — 앞치마를 두르고 인사하는 팔은 따로 그리도록 한쪽을 비운다 */
+  motherOptions?: { apronColor: string; apronTrim: string },
 ): Face[] {
   const faces: Face[] = [];
 
@@ -460,7 +485,22 @@ export function buildDino(
   const spanY = minY + maxY;
 
   for (const [x, y, z, w, d, h, c] of specs) {
+    // 엄마는 오른팔을 들어 인사하므로 몸통에서 빼고 따로 그린다.
+    // 팔은 0.8×1.5×1.6 두 개뿐이라 치수로 구분하고, 그중 x 가 작은 쪽을 뺀다.
+    if (motherOptions && w === 0.8 && d === 1.5 && h === 1.6 && x > 4) continue;
     box(faces, cam, spanX - x - w + 3.6, spanY - y - d + DINO_BUILD_Y, z + 1.2 + lift, w, d, h, c);
+  }
+
+  if (motherOptions) {
+    const MB = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
+      box(faces, cam, x, y, z, w, d, h, c);
+    const { apronColor, apronTrim } = motherOptions;
+    // 앞치마 — 배(+y 쪽) 앞면에 덧댄다
+    MB(4.1, 20.0, 2.0, 4.0, 0.35, 3.6, apronColor);
+    MB(4.1, 19.98, 2.0, 4.0, 0.4, 0.4, apronTrim); // 아랫단
+    MB(4.5, 19.98, 5.4, 0.5, 0.4, 1.4, apronTrim); // 어깨끈
+    MB(7.2, 19.98, 5.4, 0.5, 0.4, 1.4, apronTrim);
+    MB(4.1, 19.98, 4.0, 4.0, 0.4, 0.35, apronTrim); // 허리끈
   }
 
   if (withHelmet) {
@@ -589,6 +629,25 @@ function ring(
 }
 
 /** 옆에서 본 자전거. 캐릭터가 그 위에 올라탄다. */
+/** 인사하는 팔이 돌아갈 어깨의 월드 좌표 */
+export const MOTHER_SHOULDER = { x: 3.5, y: 18.3, z: 4.9 };
+
+/** 들어 올려 흔드는 팔. 몸통과 따로 그려야 어깨를 축으로 돌릴 수 있다. */
+export function buildWavingArm(bodyColor: string, cam: CameraConfig): Face[] {
+  const faces: Face[] = [];
+  const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
+    box(faces, cam, x, y, z, w, d, h, c);
+
+  // 어깨에서 위로 뻗은 팔. 어깨 높이(z 4.6)에서 시작해야 몸통과 붙어 보인다 —
+  // 위에서 시작하면 손만 공중에 뜬 것처럼 읽힌다.
+  B(2.9, 18.3, 4.6, 0.85, 1.6, 1.5, bodyColor);
+  B(2.6, 18.3, 6.0, 0.85, 1.6, 1.5, bodyColor);
+  B(2.3, 18.2, 7.4, 1.05, 1.8, 1.3, bodyColor);
+
+  faces.sort((a, b) => a.dep - b.dep);
+  return faces;
+}
+
 /**
  * 씬에서 캐릭터가 자전거를 탈 때의 배치값.
  * 자전거 원점은 바퀴가 인도(z 1.2)에 닿는 높이이고, 캐릭터는 안장 높이만큼 올라탄다.
