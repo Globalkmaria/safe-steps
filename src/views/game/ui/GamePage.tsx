@@ -31,8 +31,6 @@ const CELEBRATE_MS = 2200;
 const ABORT_MS = 1400;
 /** 헬멧 쓰고 자전거에 오른 모습을 보여준 뒤 축하 팝업이 뜨기까지 */
 const HELMET_ON_MS = 1600;
-/** 자전거 탄 모습을 충분히 본 뒤 다음 질문이 뜨기까지 */
-const RIDE_LOOK_MS = 5000;
 /** 자전거에서 내리는 동작이 끝나고 다음 질문이 뜨기까지 */
 const DISMOUNT_MS = 1600;
 
@@ -93,13 +91,6 @@ export function GamePage() {
     const t = setTimeout(() => setShowGearSuccess(true), HELMET_ON_MS);
     return () => clearTimeout(t);
   }, [gearResult]);
-
-  // 스텝 2: 자전거 탄 모습을 5초 보여준 뒤 건너는 방법을 묻는다.
-  useEffect(() => {
-    if (step !== 2) return;
-    const t = setTimeout(() => setShowModeQuiz(true), RIDE_LOOK_MS);
-    return () => clearTimeout(t);
-  }, [step]);
 
   // 스텝 3: 내리는 동작이 끝나면 신호를 묻는다.
   useEffect(() => {
@@ -230,8 +221,10 @@ export function GamePage() {
           message="A helmet protects your head every time you ride. Now off you go!"
           actionLabel="Next"
           onAction={() => {
+            // 자전거 탄 모습은 이 팝업이 뜨기 전에 이미 보여줬으므로 곧바로 다음 질문으로.
             setShowGearSuccess(false);
             setStep(2);
+            setShowModeQuiz(true);
           }}
         />
       )}
