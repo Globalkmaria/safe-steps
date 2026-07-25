@@ -3,10 +3,12 @@
 import { useMemo } from "react";
 import { Modal } from "@/shared/ui/modal";
 import { VoxelFigure } from "@/views/game/ui/VoxelFigure";
+import type { Face } from "@/views/game/model/scene";
 import {
-  buildBike,
+  buildBikeParts,
   buildDino,
   PROFILE_CAMERA,
+  projectPoint,
   SCENE_BIKE_LIFT,
   SCENE_BIKE_ORIGIN,
 } from "@/views/game/model/scene";
@@ -26,7 +28,19 @@ const TILE_H = 150;
 function ModePreview({ mode, bodyColor }: { mode: CrossingMode; bodyColor: string }) {
   // 자전거를 캐릭터 발밑 좌표에 놓아 씬과 같은 관계로 만든다 — 둘을 따로 중앙
   // 정렬하면 서로의 상대 위치가 사라져 캐릭터가 자전거에서 떨어져 보인다.
-  const bike = useMemo(() => buildBike(PROFILE_CAMERA, SCENE_BIKE_ORIGIN), []);
+  const bike = useMemo(() => buildBikeParts(PROFILE_CAMERA, SCENE_BIKE_ORIGIN), []);
+  // 바퀴는 축(허브)을 중심으로 돈다. 그룹 원점을 축으로 삼으면 바퀴가 통째로
+  // 궤도를 그리며 날아간다 — 엄마 팔을 어깨에서 돌린 것과 같은 이유다.
+  const rearPivot = useMemo(
+    () => projectPoint(PROFILE_CAMERA, bike.rearHub.x, bike.rearHub.y, bike.rearHub.z),
+    [bike],
+  );
+  const frontPivot = useMemo(
+    () => projectPoint(PROFILE_CAMERA, bike.frontHub.x, bike.frontHub.y, bike.frontHub.z),
+    [bike],
+  );
+  // 타고 갈 때가 끌고 갈 때보다 빠르다.
+  const spin = mode === "ride" ? ".55s" : "1.1s";
   // 타고 갈 때는 안장 높이로 올라타고, 끌고 갈 때는 땅에 내려선다.
   const rider = useMemo(
     () => buildDino(bodyColor, PROFILE_CAMERA, {
@@ -45,11 +59,21 @@ function ModePreview({ mode, bodyColor }: { mode: CrossingMode; bodyColor: strin
         style={{ animation: "ss-cross-loop 3s linear infinite" }}
       >
         <VoxelFigure
-          faces={bike}
+          faces={bike.frame}
           width={TILE_W}
           height={TILE_H}
           nudge={PREVIEW_NUDGE}
           style={{ position: "absolute", inset: 0 }}
+        />
+        <Wheel
+          faces={bike.rearWheel}
+          pivot={rearPivot}
+          duration={spin}
+        />
+        <Wheel
+          faces={bike.frontWheel}
+          pivot={frontPivot}
+          duration={spin}
         />
         <div
           style={{
@@ -69,6 +93,39 @@ function ModePreview({ mode, bodyColor }: { mode: CrossingMode; bodyColor: strin
             nudge={PREVIEW_NUDGE}
             style={{ position: "absolute", inset: 0 }}
           />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** 축을 중심으로 구르는 바퀴 */
+function Wheel({
+  faces,
+  pivot,
+  duration,
+}: {
+  faces: Face[];
+  pivot: { x: number; y: number };
+  duration: string;
+}) {
+  return (
+    // VoxelFigure 와 같은 계층으로 맞춘다: 바깥 칸 → 중앙 이동 → 회전 → 면들.
+    // 회전과 이동을 한 요소에 두면 애니메이션의 transform 이 이동을 덮어쓴다.
+    <div aria-hidden className="absolute inset-0">
+      <div className="absolute left-1/2 top-1/2 h-0 w-0" style={{ transform: PREVIEW_NUDGE }}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            transformOrigin: `${pivot.x}px ${pivot.y}px`,
+            animation: `ss-wheel ${duration} linear infinite`,
+          }}
+        >
+          {faces.map((face, i) => (
+            <div key={i} className={face.className} style={face.style} />
+          ))}
         </div>
       </div>
     </div>

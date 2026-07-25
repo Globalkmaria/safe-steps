@@ -673,23 +673,38 @@ export function buildWavingArm(
 export const SCENE_BIKE_ORIGIN = { x: 6.09, y: 17.8, z: 1.2 };
 export const SCENE_BIKE_LIFT = 3.4;
 
-export function buildBike(
+/** 자전거를 부위별로. 바퀴를 따로 돌리려면 프레임과 분리돼 있어야 한다. */
+export interface BikeParts {
+  frame: Face[];
+  rearWheel: Face[];
+  frontWheel: Face[];
+  /** 바퀴가 도는 축(월드 좌표). 화면 좌표로 바꿔 transform-origin 에 쓴다. */
+  rearHub: { x: number; y: number; z: number };
+  frontHub: { x: number; y: number; z: number };
+}
+
+const BIKE_REAR_Y = -3.4;
+const BIKE_FRONT_Y = 3.4;
+const BIKE_HUB_Z = 2.6;
+const BIKE_R = 2.5;
+
+export function buildBikeParts(
   cam: CameraConfig = PROFILE_CAMERA,
-  /** 월드에 놓을 위치. 팝업은 원점, 씬은 캐릭터 발밑. */
   origin: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
-): Face[] {
-  const faces: Face[] = [];
-  const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
-    box(faces, cam, x + origin.x, y + origin.y, z + origin.z, w, d, h, c);
+): BikeParts {
+  const frame: Face[] = [];
+  const rearWheel: Face[] = [];
+  const frontWheel: Face[] = [];
 
-  const REAR_Y = -3.4;
-  const FRONT_Y = 3.4;
-  const HUB_Z = 2.6;
-  const R = 2.5;
+  const at =
+    (out: Face[]) =>
+    (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
+      box(out, cam, x + origin.x, y + origin.y, z + origin.z, w, d, h, c);
 
-  ring(B, REAR_Y, HUB_Z, R, 0.62, TYRE);
-  ring(B, FRONT_Y, HUB_Z, R, 0.62, TYRE);
+  ring(at(rearWheel), BIKE_REAR_Y, BIKE_HUB_Z, BIKE_R, 0.62, TYRE);
+  ring(at(frontWheel), BIKE_FRONT_Y, BIKE_HUB_Z, BIKE_R, 0.62, TYRE);
 
+  const B = at(frame);
   // 프레임 — 대각선은 복셀이라 계단으로 만든다
   B(0, -2.0, 5.0, 0.45, 3.9, 0.45, FRAME); // 탑 튜브
   B(0, -2.2, 2.6, 0.45, 0.45, 2.6, FRAME); // 시트 튜브
@@ -700,12 +715,29 @@ export function buildBike(
   for (let i = 0; i < 4; i++) {
     B(0, 2.6 + i * 0.28, 5.0 - i * 0.72, 0.45, 0.5, 0.8, FRAME); // 앞 포크
   }
-
   B(0, -2.9, 5.5, 0.5, 1.5, 0.4, "#2c3a44"); // 안장
   B(0, 2.8, 5.5, 0.5, 1.6, 0.4, "#2c3a44"); // 핸들바
 
-  faces.sort((a, b) => a.dep - b.dep);
-  return faces;
+  for (const list of [frame, rearWheel, frontWheel]) list.sort((a, b) => a.dep - b.dep);
+
+  return {
+    frame,
+    rearWheel,
+    frontWheel,
+    rearHub: { x: origin.x, y: origin.y + BIKE_REAR_Y, z: origin.z + BIKE_HUB_Z },
+    frontHub: { x: origin.x, y: origin.y + BIKE_FRONT_Y, z: origin.z + BIKE_HUB_Z },
+  };
+}
+
+/** 옆에서 본 자전거 한 덩어리. 바퀴를 돌릴 필요가 없는 곳에서 쓴다. */
+export function buildBike(
+  cam: CameraConfig = PROFILE_CAMERA,
+  origin: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
+): Face[] {
+  const p = buildBikeParts(cam, origin);
+  const all = [...p.frame, ...p.rearWheel, ...p.frontWheel];
+  all.sort((a, b) => a.dep - b.dep);
+  return all;
 }
 
 /**
