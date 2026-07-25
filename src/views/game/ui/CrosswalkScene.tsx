@@ -33,6 +33,8 @@ interface CrosswalkSceneProps {
   dinoColor: string;
   /** 자전거 스텝을 통과하면 헬멧을 쓴다 */
   wearsHelmet?: boolean;
+  /** 자전거에서 내렸다 — 캐릭터만 안장 높이에서 땅으로 내려온다 */
+  dismounted?: boolean;
   crossSeconds: number;
   onWalk: () => void;
 }
@@ -49,6 +51,7 @@ export function CrosswalkScene({
   instant,
   dinoColor,
   wearsHelmet = false,
+  dismounted = false,
   crossSeconds,
   onWalk,
 }: CrosswalkSceneProps) {
@@ -109,6 +112,17 @@ export function CrosswalkScene({
   };
 
   const delta = screenDelta(0, (DINO_BUILD_Y - dinoY) * UNIT, 0);
+
+  // 내리는 동작은 모델을 다시 짓지 않고 화면 좌표로만 내린다 — 태운 높이가 지오메트리에
+  // 박혀 있어 매 프레임 다시 지으면 비싸고, 전환도 부드럽지 않다.
+  const dropped = screenDelta(0, 0, -SCENE_BIKE_LIFT * UNIT);
+  const dismountStyle: CSSProperties = {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    transform: dismounted ? `translate(${dropped.dx}px,${dropped.dy}px)` : "none",
+    transition: "transform 1s ease-in-out",
+  };
 
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden">
@@ -204,9 +218,11 @@ export function CrosswalkScene({
                   {bikeFaces.map((face, i) => (
                     <div key={`b${i}`} style={face.style} />
                   ))}
-                  {dinoFaces.map((face, i) => (
-                    <div key={`d${i}`} style={face.style} />
-                  ))}
+                  <div style={dismountStyle}>
+                    {dinoFaces.map((face, i) => (
+                      <div key={`d${i}`} style={face.style} />
+                    ))}
+                  </div>
                 </div>
               </button>
             </div>

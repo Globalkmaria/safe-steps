@@ -188,3 +188,13 @@ textarea {
     opacity: 1;
   }
 }
+
+/* 선택지 안에서 3초마다 가로지르는 미리보기 */
+@keyframes ss-cross-loop {
+  0% {
+    transform: translateX(-42%);
+  }
+  100% {
+    transform: translateX(42%);
+  }
+}

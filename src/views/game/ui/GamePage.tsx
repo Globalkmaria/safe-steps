@@ -7,6 +7,8 @@ import { SignalQuiz } from "@/views/game/ui/SignalQuiz";
 import type { SignalChoice } from "@/views/game/ui/SignalQuiz";
 import { BikeQuiz } from "@/views/game/ui/BikeQuiz";
 import type { BikeChoice } from "@/views/game/ui/BikeQuiz";
+import { CrossingModeQuiz } from "@/views/game/ui/CrossingModeQuiz";
+import type { CrossingMode } from "@/views/game/ui/CrossingModeQuiz";
 import { useCrosswalkGame } from "@/views/game/model/use-crosswalk-game";
 
 /** 캐릭터 몸 색. 선택 UI 가 사라져 지금은 고정값이다. */
@@ -31,6 +33,10 @@ const ABORT_MS = 1400;
  * 곧바로 덮으면 정작 보여주려던 장면을 아무도 못 본다.
  */
 const HELMET_ON_MS = 1600;
+/** 자전거 탄 모습을 충분히 본 뒤 세 번째 질문이 뜨기까지 */
+const RIDE_LOOK_MS = 5000;
+/** 자전거에서 내리는 동작이 끝나고 건너기 시작하기까지 */
+const DISMOUNT_MS = 1200;
 
 const BUBBLE_TEXT = {
   idle: "Let's cross safely! Wait for the green light.",
@@ -41,8 +47,8 @@ const BUBBLE_TEXT = {
   oops: "Wait! It's not safe to cross yet.",
 } as const;
 
-/** 스텝 1 = 신호 판단, 스텝 2 = 자전거 준비물 */
-type Step = 1 | 2;
+/** 스텝 1 = 신호 판단, 2 = 자전거 준비물, 3 = 건너는 방법 */
+type Step = 1 | 2 | 3;
 
 export function GamePage() {
   const game = useCrosswalkGame({
@@ -62,12 +68,17 @@ export function GamePage() {
   const [bikeResult, setBikeResult] = useState<"retry" | "success" | null>(null);
   const [wearsHelmet, setWearsHelmet] = useState(false);
   const [showBikeSuccess, setShowBikeSuccess] = useState(false);
+  const [showModeQuiz, setShowModeQuiz] = useState(false);
+  const [modeResult, setModeResult] = useState<"retry" | "success" | null>(null);
+  const [dismounted, setDismounted] = useState(false);
+  /** 신호가 초록이 되면 스스로 건넌다 — 스텝 1·3 이 공유한다 */
+  const [autoCross, setAutoCross] = useState(false);
 
   // 초록을 골랐으면 불이 바뀌는 순간 자동으로 건넌다 — 아이가 같은 판단을 두 번
   // 하게 만들지 않는다. 기계에 새 단계를 넣는 대신 기존 walk() 를 부른다.
   useEffect(() => {
-    if (choice === "green" && phase === "green") walk();
-  }, [choice, phase, walk]);
+    if (autoCross && phase === "green") walk();
+  }, [autoCross, phase, walk]);
 
   // oops 를 벗어나는 경로는 handleRetry 뿐이고 거기서 직접 닫으므로,
   // 여기서는 예약만 한다(이펙트 본문의 동기 setState 는 연쇄 렌더를 부른다).
@@ -79,10 +90,24 @@ export function GamePage() {
 
   // 길을 건넜으면 축하 연출을 충분히 보여준 뒤 다음 스텝으로 넘어간다.
   useEffect(() => {
-    if (phase !== "success") return;
+    if (phase !== "success" || step !== 1) return;
     const t = setTimeout(() => setStep(2), CELEBRATE_MS);
     return () => clearTimeout(t);
-  }, [phase]);
+  }, [phase, step]);
+
+  // 스텝 3: 자전거 탄 모습을 5초 보여준 뒤 건너는 방법을 묻는다.
+  useEffect(() => {
+    if (step !== 3) return;
+    const t = setTimeout(() => setShowModeQuiz(true), RIDE_LOOK_MS);
+    return () => clearTimeout(t);
+  }, [step]);
+
+  // 스텝 3 에서 다 건너면 축하 팝업을 띄운다.
+  useEffect(() => {
+    if (step !== 3 || phase !== "success") return;
+    const t = setTimeout(() => setModeResult("success"), CELEBRATE_MS);
+    return () => clearTimeout(t);
+  }, [step, phase]);
 
   // 헬멧 쓴 모습을 먼저 보여주고 나서 축하 팝업을 띄운다.
   useEffect(() => {
@@ -94,14 +119,39 @@ export function GamePage() {
   const handleSignalChoice = (picked: SignalChoice) => {
     setChoice(picked);
     // 초록 → 신호를 바꾼다. 빨강 → 빨간불에 건너려다 멈추는 기존 실패 경로를 탄다.
-    if (picked === "green") pressButton();
-    else walk();
+    if (picked === "green") {
+      setAutoCross(true);
+      pressButton();
+    } else {
+      walk();
+    }
   };
 
   const handleRetry = () => {
     setShowRetry(false);
     setChoice(null);
+    setAutoCross(false);
     tryAgain();
+  };
+
+  /** 스텝 3 답 — 타고 건너면 실패, 내려서 끌고 건너면 성공 */
+  const handleModeChoice = (mode: CrossingMode) => {
+    setShowModeQuiz(false);
+    if (mode === "ride") {
+      setModeResult("retry");
+      return;
+    }
+    // 내리는 동작을 먼저 보여주고, 끝나면 건너기 시작한다.
+    setDismounted(true);
+    setTimeout(() => {
+      setAutoCross(true);
+      pressButton();
+    }, DISMOUNT_MS);
+  };
+
+  const handleModeRetry = () => {
+    setModeResult(null);
+    setShowModeQuiz(true);
   };
 
   const handleBikeChoice = (picked: BikeChoice) => {
@@ -111,12 +161,17 @@ export function GamePage() {
     }
     // 헬멧을 씌우고 횡단보도 앞 출발 자리로 돌려보낸다 — 다음 이야기의 시작 자세다.
     setBikeResult("success");
+    setAutoCross(false);
     setWearsHelmet(true);
     reset();
   };
 
   /** 처음부터 다시 — 씬과 팝업 상태를 모두 되돌린다 */
   const handleRestartAll = () => {
+    setAutoCross(false);
+    setDismounted(false);
+    setShowModeQuiz(false);
+    setModeResult(null);
     setWearsHelmet(false);
     setShowBikeSuccess(false);
     setBikeResult(null);
@@ -140,6 +195,7 @@ export function GamePage() {
             instant={game.instant}
             dinoColor={DINO_COLOR}
             wearsHelmet={wearsHelmet}
+            dismounted={dismounted}
             crossSeconds={CROSS_SECONDS}
             onWalk={walk}
           />
@@ -186,6 +242,34 @@ export function GamePage() {
           tone="success"
           title="Helmet on — well done!"
           message="A helmet protects your head every time you ride. Always put it on before you set off."
+          actionLabel="Next"
+          onAction={() => {
+            setShowBikeSuccess(false);
+            setStep(3);
+          }}
+        />
+      )}
+
+      {/* --- 스텝 3: 건너는 방법 --- */}
+      {step === 3 && showModeQuiz && (
+        <CrossingModeQuiz bodyColor={DINO_COLOR} onSelect={handleModeChoice} />
+      )}
+
+      {step === 3 && modeResult === "retry" && (
+        <ResultDialog
+          tone="retry"
+          title="Do not ride across!"
+          message="Riding across is risky — drivers see you late and you cannot stop quickly. Get off and walk your bike."
+          actionLabel="Try again"
+          onAction={handleModeRetry}
+        />
+      )}
+
+      {step === 3 && modeResult === "success" && (
+        <ResultDialog
+          tone="success"
+          title="You walked your bike across!"
+          message="Getting off and pushing your bike is the safe way to cross. Well done!"
           actionLabel="Play again"
           onAction={handleRestartAll}
         />
