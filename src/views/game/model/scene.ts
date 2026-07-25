@@ -112,11 +112,12 @@ function box(
   h: number,
   col: string,
   topImage?: string,
+  depthBias = 0,
 ): void {
   const U = UNIT;
   const g = gridImage();
   const C = CAMERA_TRANSFORM;
-  const dep = depth((x + w / 2) * U, -(y + dp / 2) * U, (z + h / 2) * U);
+  const dep = depth((x + w / 2) * U, -(y + dp / 2) * U, (z + h / 2) * U) + depthBias;
   const base: CSSProperties = {
     position: "absolute",
     left: 0,
@@ -195,25 +196,39 @@ export function buildWorld(): Face[] {
     h: number,
     col: string,
     topImage?: string,
-  ) => box(faces, x, y, z, w, dp, h, col, topImage);
+    depthBias?: number,
+  ) => box(faces, x, y, z, w, dp, h, col, topImage, depthBias);
 
   const roadTop = shade(ROAD, 1.14);
   const stripes = `repeating-linear-gradient(90deg, ${STRIPE} 0 ${1.4 * UNIT}px, ${roadTop} ${1.4 * UNIT}px ${2.4 * UNIT}px)`;
 
-  // 지면
-  B(-13, -11, 0, 34, 2, 0.5, GRASS);
-  B(-13, -9, 0, 34, 9, 1.2, WALK);
-  B(-13, 14, 0, 34, 8, 1.2, WALK);
-  B(-13, 0, 0, 13, 14, 1.05, ROAD);
-  B(12, 0, 0, 9, 14, 1.05, ROAD);
-  B(0, 0, 0, 12, 14, 1.05, ROAD, stripes); // 횡단보도
-  B(-13, 22, 0, 34, 6.5, 0.5, GRASS);
+  // 지면.
+  //
+  // 화가 알고리즘의 한계 보정 — 정렬 기준이 상자의 중심점 하나뿐이라, 34칸짜리
+  // 인도·도로 슬래브는 중심이 그 위에 선 기둥·나무보다 앞으로 계산되어 덮어버린다.
+  // 원본 카메라 각(-24°)에서는 우연히 드러나지 않았지만 66° 에서 기둥이 사라졌다.
+  // 지면은 정의상 그 위의 모든 것보다 뒤이므로 큰 음수 바이어스로 항상 맨 뒤에 둔다.
+  const GROUND = -1e6;
+  B(-13, -11, 0, 34, 2, 0.5, GRASS, undefined, GROUND);
+  B(-13, -9, 0, 34, 9, 1.2, WALK, undefined, GROUND);
+  B(-13, 14, 0, 34, 8, 1.2, WALK, undefined, GROUND);
+  B(-13, 0, 0, 13, 14, 1.05, ROAD, undefined, GROUND);
+  B(12, 0, 0, 9, 14, 1.05, ROAD, undefined, GROUND);
+  B(0, 0, 0, 12, 14, 1.05, ROAD, stripes, GROUND); // 횡단보도
+  B(-13, 22, 0, 34, 6.5, 0.5, GRASS, undefined, GROUND);
 
-  // 신호등 기둥
-  B(-3.6, 15.1, 1.2, 1.8, 1.8, 0.5, POST);
-  B(-3.2, 15.5, 1.6, 1, 1, 8.2, POST);
-  B(-4.3, 14.4, 9.6, 3.2, 2.1, 4.1, POST);
-  B(-3.85, 15.3, 3.3, 2.5, 0.4, 3.1, "#4b525b");
+  // 신호등 — 기둥의 수직축을 중심으로 원본에서 90° 돌려세웠다.
+  //
+  // 왜 90° 인가: 신호 패널은 두께 없는 평면이라 법선이 카메라를 향해야 보인다.
+  // 원본 카메라(-24°)에서 정면이던 평면은 카메라를 +90° 돌린 지금 정확히 옆면이 되어
+  // 두께 0으로 사라진다. 180° 로 뒤집어도 여전히 옆면이므로 소용이 없다.
+  // 패널을 같이 90° 돌려야 법선이 카메라와 다시 정렬된다.
+  //
+  // 받침과 기둥은 축 대칭이라 좌표가 그대로고, 함체와 버튼함만 가로·세로가 뒤바뀐다.
+  B(-3.6, 15.1, 1.2, 1.8, 1.8, 0.5, POST); // 받침
+  B(-3.2, 15.5, 1.6, 1, 1, 8.2, POST); // 기둥
+  B(-4.3, 14.4, 9.6, 2.1, 3.2, 4.1, POST); // 함체 (원본 3.2×2.1 → 2.1×3.2)
+  B(-3.4, 14.65, 3.3, 0.4, 2.5, 3.1, "#4b525b"); // 버튼함 (원본 2.5×0.4 → 0.4×2.5)
 
   // 나무
   B(13.4, 15.2, 1.2, 1, 1, 2.4, BROWN);
@@ -308,3 +323,9 @@ export function signalPixels(isGreen: boolean): { rows: string[]; columns: numbe
   const rows = isGreen ? WALK_PIXELS : HAND_PIXELS;
   return { rows, columns: rows[0]?.length ?? 0 };
 }
+
+/** 신호등을 기둥의 수직축으로 돌린 각. 함체 AABB 회전과 짝을 이룬다. */
+export const SIGNAL_TURN_DEG = -90;
+
+/** 돌아간 함체에서 패널·버튼이 붙는 면의 x 좌표 */
+export const SIGNAL_FACE_X = -4.35;

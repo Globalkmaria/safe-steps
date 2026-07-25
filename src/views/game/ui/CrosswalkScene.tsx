@@ -8,6 +8,8 @@ import {
   CAMERA_TRANSFORM,
   screenDelta,
   signalPixels,
+  SIGNAL_FACE_X,
+  SIGNAL_TURN_DEG,
   STAGE_HEIGHT,
   STAGE_WIDTH,
   UNIT,
@@ -79,7 +81,9 @@ export function CrosswalkScene({
     background: "#17191c",
     border: "2px solid #0e1012",
     borderRadius: 3,
-    transform: `${CAMERA_TRANSFORM} translate3d(${-3.95 * UNIT}px,${-14.32 * UNIT}px,${13.1 * UNIT}px) rotateX(-90deg)`,
+    // 함체를 90° 돌린 것에 맞춰 패널도 같이 돌린다. rotateZ 가 월드 수직축 회전이고,
+    // rotateX(-90deg) 이 평면을 세운다. 순서가 바뀌면 엉뚱한 축으로 돈다.
+    transform: `${CAMERA_TRANSFORM} translate3d(${SIGNAL_FACE_X * UNIT}px,${-14.55 * UNIT}px,${13.1 * UNIT}px) rotateZ(${SIGNAL_TURN_DEG}deg) rotateX(-90deg)`,
     animation:
       phase === "oops"
         ? "ss-flash .5s steps(1,end) 3"
@@ -106,7 +110,8 @@ export function CrosswalkScene({
     boxShadow: pressed
       ? "0 0 22px rgba(255,214,90,.95), inset 0 0 10px rgba(255,255,255,.7)"
       : "0 0 14px rgba(0,0,0,.25)",
-    transform: `${CAMERA_TRANSFORM} translate3d(${-3.75 * UNIT}px,${-15.15 * UNIT}px,${6 * UNIT}px) rotateX(-90deg)`,
+    // 버튼은 함체가 아니라 기둥의 버튼함(x −3.4..−3.0) 면에 붙는다.
+    transform: `${CAMERA_TRANSFORM} translate3d(${-3.45 * UNIT}px,${-14.9 * UNIT}px,${6 * UNIT}px) rotateZ(${SIGNAL_TURN_DEG}deg) rotateX(-90deg)`,
     display: "grid",
     placeItems: "center",
   };
@@ -173,7 +178,7 @@ export function CrosswalkScene({
                   transformOrigin: "0 0",
                   width: 4.4 * UNIT,
                   height: 12 * UNIT,
-                  transform: `${CAMERA_TRANSFORM} translate3d(${-4.6 * UNIT}px,${-15.05 * UNIT}px,${13 * UNIT}px) rotateX(-90deg)`,
+                  transform: `${CAMERA_TRANSFORM} translate3d(${-3.9 * UNIT}px,${-14.4 * UNIT}px,${13 * UNIT}px) rotateZ(${SIGNAL_TURN_DEG}deg) rotateX(-90deg)`,
                   background: "transparent",
                   border: "none",
                   cursor: phase === "idle" ? "pointer" : "default",
