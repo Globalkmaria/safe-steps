@@ -392,6 +392,8 @@ export function buildDino(
   cam: CameraConfig = SCENE_CAMERA,
   /** 머리에 헬멧을 씌운다 — 자전거 스텝을 통과한 뒤의 모습 */
   withHelmet = false,
+  /** 안장에 앉도록 통째로 들어올린다(자전거를 탈 때) */
+  lift = 0,
 ): Face[] {
   const faces: Face[] = [];
 
@@ -458,7 +460,7 @@ export function buildDino(
   const spanY = minY + maxY;
 
   for (const [x, y, z, w, d, h, c] of specs) {
-    box(faces, cam, spanX - x - w + 3.6, spanY - y - d + DINO_BUILD_Y, z + 1.2, w, d, h, c);
+    box(faces, cam, spanX - x - w + 3.6, spanY - y - d + DINO_BUILD_Y, z + 1.2 + lift, w, d, h, c);
   }
 
   if (withHelmet) {
@@ -469,7 +471,7 @@ export function buildDino(
       const [hx, hy, hz, hw, hd, hh] = head;
       const cx = spanX - hx - hw + 3.6 + hw / 2;
       const cy = spanY - hy - hd + DINO_BUILD_Y + hd / 2;
-      const top = hz + 1.2 + hh;
+      const top = hz + 1.2 + lift + hh;
 
       const HB = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
         box(faces, cam, x, y, z, w, d, h, c);
@@ -587,10 +589,22 @@ function ring(
 }
 
 /** 옆에서 본 자전거. 캐릭터가 그 위에 올라탄다. */
-export function buildBike(cam: CameraConfig = PROFILE_CAMERA): Face[] {
+/**
+ * 씬에서 캐릭터가 자전거를 탈 때의 배치값.
+ * 자전거 원점은 바퀴가 인도(z 1.2)에 닿는 높이이고, 캐릭터는 안장 높이만큼 올라탄다.
+ * 자전거는 두께가 얇은 판이라 x 는 캐릭터 몸 중심(6.4)에 판 두께의 절반을 뺀 값이다.
+ */
+export const SCENE_BIKE_ORIGIN = { x: 6.09, y: 17.8, z: 1.2 };
+export const SCENE_BIKE_LIFT = 3.4;
+
+export function buildBike(
+  cam: CameraConfig = PROFILE_CAMERA,
+  /** 월드에 놓을 위치. 팝업은 원점, 씬은 캐릭터 발밑. */
+  origin: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
+): Face[] {
   const faces: Face[] = [];
   const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
-    box(faces, cam, x, y, z, w, d, h, c);
+    box(faces, cam, x + origin.x, y + origin.y, z + origin.z, w, d, h, c);
 
   const REAR_Y = -3.4;
   const FRONT_Y = 3.4;

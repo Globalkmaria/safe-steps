@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import {
+  buildBike,
   buildDino,
   buildWorld,
   CAMERA_TRANSFORM,
@@ -14,6 +15,9 @@ import {
   SIGNAL_PANEL_W,
   SIGNAL_PANEL_Y,
   SIGNAL_PANEL_Z,
+  SCENE_BIKE_LIFT,
+  SCENE_CAMERA,
+  SCENE_BIKE_ORIGIN,
   SIGNAL_TURN_DEG,
   STAGE_HEIGHT,
   STAGE_WIDTH,
@@ -64,9 +68,15 @@ export function CrosswalkScene({
   }, []);
 
   const worldFaces = useMemo(() => buildWorld(), []);
+  // 헬멧을 썼다는 것은 자전거 스텝을 통과했다는 뜻이라, 자전거도 같이 탄다.
+  const ridesBike = wearsHelmet;
   const dinoFaces = useMemo(
-    () => buildDino(dinoColor, undefined, wearsHelmet),
-    [dinoColor, wearsHelmet],
+    () => buildDino(dinoColor, undefined, wearsHelmet, ridesBike ? SCENE_BIKE_LIFT : 0),
+    [dinoColor, wearsHelmet, ridesBike],
+  );
+  const bikeFaces = useMemo(
+    () => (ridesBike ? buildBike(SCENE_CAMERA, SCENE_BIKE_ORIGIN) : []),
+    [ridesBike],
   );
   const { rows, columns } = useMemo(() => signalPixels(isGreen), [isGreen]);
 
@@ -191,6 +201,9 @@ export function CrosswalkScene({
                           : "ss-bob 2.6s ease-in-out infinite",
                   }}
                 >
+                  {bikeFaces.map((face, i) => (
+                    <div key={`b${i}`} style={face.style} />
+                  ))}
                   {dinoFaces.map((face, i) => (
                     <div key={`d${i}`} style={face.style} />
                   ))}
