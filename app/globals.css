@@ -173,3 +173,18 @@ textarea {
     scroll-behavior: auto !important;
   }
 }
+
+/* 자전거를 타고 왼쪽에서 들어오는 등장 */
+@keyframes ss-ride-in {
+  0% {
+    transform: translateX(-190%);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

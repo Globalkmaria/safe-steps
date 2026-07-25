@@ -5,6 +5,8 @@ import { CrosswalkScene } from "@/views/game/ui/CrosswalkScene";
 import { ResultDialog } from "@/views/game/ui/ResultDialog";
 import { SignalQuiz } from "@/views/game/ui/SignalQuiz";
 import type { SignalChoice } from "@/views/game/ui/SignalQuiz";
+import { BikeQuiz } from "@/views/game/ui/BikeQuiz";
+import type { BikeChoice } from "@/views/game/ui/BikeQuiz";
 import { useCrosswalkGame } from "@/views/game/model/use-crosswalk-game";
 
 /** 캐릭터 몸 색. 선택 UI 가 사라져 지금은 고정값이다. */
@@ -17,7 +19,7 @@ const DINO_COLOR = "#62b73a";
 const WAIT_SECONDS = 0.6;
 const CROSS_SECONDS = 3.4;
 
-/** 성공 연출(색종이·별)을 보고 난 뒤 다시하기 팝업이 뜨기까지 */
+/** 성공 연출(색종이)을 보고 난 뒤 다음 스텝이 뜨기까지 */
 const CELEBRATE_MS = 2200;
 /**
  * 빨간불에 나서려다 멈추는 동작을 다 보여준 뒤 실패 팝업이 뜨기까지.
@@ -34,6 +36,9 @@ const BUBBLE_TEXT = {
   oops: "Wait! It's not safe to cross yet.",
 } as const;
 
+/** 스텝 1 = 신호 판단, 스텝 2 = 자전거 준비물 */
+type Step = 1 | 2;
+
 export function GamePage() {
   const game = useCrosswalkGame({
     waitSeconds: WAIT_SECONDS,
@@ -46,9 +51,10 @@ export function GamePage() {
    * 팝업 레이어의 상태. 씬과 상태 기계는 665a9f4 그대로 두고, 그 위에서만 관리한다.
    * null = 아직 안 골랐다(퀴즈 표시 중).
    */
+  const [step, setStep] = useState<Step>(1);
   const [choice, setChoice] = useState<SignalChoice | null>(null);
-  const [showReplay, setShowReplay] = useState(false);
   const [showRetry, setShowRetry] = useState(false);
+  const [bikeResult, setBikeResult] = useState<"retry" | "success" | null>(null);
 
   // 초록을 골랐으면 불이 바뀌는 순간 자동으로 건넌다 — 아이가 같은 판단을 두 번
   // 하게 만들지 않는다. 기계에 새 단계를 넣는 대신 기존 walk() 를 부른다.
@@ -56,7 +62,6 @@ export function GamePage() {
     if (choice === "green" && phase === "green") walk();
   }, [choice, phase, walk]);
 
-  // 멈칫하는 동작을 다 보여준 뒤 실패 팝업을 띄운다.
   // oops 를 벗어나는 경로는 handleRetry 뿐이고 거기서 직접 닫으므로,
   // 여기서는 예약만 한다(이펙트 본문의 동기 setState 는 연쇄 렌더를 부른다).
   useEffect(() => {
@@ -65,14 +70,14 @@ export function GamePage() {
     return () => clearTimeout(t);
   }, [phase]);
 
-  // 성공 연출을 충분히 보여준 뒤 다시하기 팝업을 띄운다.
+  // 길을 건넜으면 축하 연출을 충분히 보여준 뒤 다음 스텝으로 넘어간다.
   useEffect(() => {
     if (phase !== "success") return;
-    const t = setTimeout(() => setShowReplay(true), CELEBRATE_MS);
+    const t = setTimeout(() => setStep(2), CELEBRATE_MS);
     return () => clearTimeout(t);
   }, [phase]);
 
-  const handleChoice = (picked: SignalChoice) => {
+  const handleSignalChoice = (picked: SignalChoice) => {
     setChoice(picked);
     // 초록 → 신호를 바꾼다. 빨강 → 빨간불에 건너려다 멈추는 기존 실패 경로를 탄다.
     if (picked === "green") pressButton();
@@ -85,9 +90,16 @@ export function GamePage() {
     tryAgain();
   };
 
-  const handleReplay = () => {
+  const handleBikeChoice = (picked: BikeChoice) => {
+    setBikeResult(picked === "helmet" ? "success" : "retry");
+  };
+
+  /** 처음부터 다시 — 씬과 팝업 상태를 모두 되돌린다 */
+  const handleRestartAll = () => {
+    setBikeResult(null);
+    setStep(1);
     setChoice(null);
-    setShowReplay(false);
+    setShowRetry(false);
     reset();
   };
 
@@ -117,9 +129,12 @@ export function GamePage() {
         </p>
       </main>
 
-      {choice === null && phase === "idle" && <SignalQuiz onSelect={handleChoice} />}
+      {/* --- 스텝 1: 신호 판단 --- */}
+      {step === 1 && choice === null && phase === "idle" && (
+        <SignalQuiz onSelect={handleSignalChoice} />
+      )}
 
-      {showRetry && (
+      {step === 1 && showRetry && (
         <ResultDialog
           tone="retry"
           title="That was the red light!"
@@ -129,13 +144,26 @@ export function GamePage() {
         />
       )}
 
-      {showReplay && (
+      {/* --- 스텝 2: 자전거 준비물 --- */}
+      {step === 2 && bikeResult === null && <BikeQuiz onSelect={handleBikeChoice} />}
+
+      {step === 2 && bikeResult === "retry" && (
+        <ResultDialog
+          tone="retry"
+          title="Pizza is not safety gear!"
+          message="A snack will not protect your head. Try again and pick the thing that keeps you safe."
+          actionLabel="Try again"
+          onAction={() => setBikeResult(null)}
+        />
+      )}
+
+      {step === 2 && bikeResult === "success" && (
         <ResultDialog
           tone="success"
-          title="You crossed safely!"
-          message="Green means the cars have stopped. That is when it is safe to walk."
+          title="Helmet on — well done!"
+          message="A helmet protects your head every time you ride. Always put it on before you set off."
           actionLabel="Play again"
-          onAction={handleReplay}
+          onAction={handleRestartAll}
         />
       )}
     </div>

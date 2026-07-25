@@ -84,6 +84,30 @@ export const PORTRAIT_CAMERA: CameraConfig = {
   offsetY: 0,
 };
 
+/**
+ * 팝업 선택지 썸네일용 카메라. 초상보다 훨씬 작게 잡는다 — 피자 한 판은
+ * 캐릭터 머리보다 크므로 같은 배율로는 상자를 넘친다.
+ */
+export const THUMB_CAMERA: CameraConfig = {
+  thetaDeg: 58,
+  phiDeg: 205,
+  scale: 0.62,
+  offsetX: 0,
+  offsetY: 0,
+};
+
+/**
+ * 자전거를 탄 옆모습용 카메라. 초상과 같은 눈높이지만 90° 돌려 측면을 본다 —
+ * 자전거를 타고 지나가는 것은 옆에서 봐야 읽힌다.
+ */
+export const PROFILE_CAMERA: CameraConfig = {
+  thetaDeg: 78,
+  phiDeg: 90,
+  scale: 0.52,
+  offsetX: 0,
+  offsetY: 0,
+};
+
 function cameraTransform(c: CameraConfig): string {
   return `translate(${c.offsetX}px,${c.offsetY}px) scale(${c.scale}) rotateX(${c.thetaDeg}deg) rotateZ(${c.phiDeg}deg)`;
 }
@@ -470,3 +494,181 @@ export const SIGNAL_PANEL_H = 3.1 * SIGNAL_SCALE;
 /** 함체 앞면 안에서 가로·세로 모두 가운데 */
 export const SIGNAL_PANEL_Y = POST_CENTER_Y - SIGNAL_PANEL_W / 2;
 export const SIGNAL_PANEL_Z = HEAD_Z + HEAD_H - (HEAD_H - SIGNAL_PANEL_H) / 2;
+
+/* ── 소품 복셀 모델 ──────────────────────────────────────────────
+ * 팝업 선택지와 자전거를 씬과 같은 복셀 렌더러로 짓는다. 평면 도트로 그리면
+ * 캐릭터·신호등과 그림체가 갈라지므로, 같은 box() 를 써서 한 벌로 맞춘다.
+ */
+
+const TYRE = "#1c1f22";
+const FRAME = "#9aa4ab";
+
+/**
+ * 바퀴 — 작은 정육면체를 원둘레에 늘어놓아 링을 만든다.
+ *
+ * 자전거는 **y-z 평면**에 짓는다. 프로필 카메라(phi 90°)는 x 축을 따라 보므로,
+ * x-z 평면에 지으면 자전거가 두께 0의 옆면으로 사라진다.
+ */
+function ring(
+  push: (x: number, y: number, z: number, w: number, d: number, h: number, c: string) => void,
+  cy: number,
+  cz: number,
+  radius: number,
+  cube: number,
+  color: string,
+  steps = 22,
+): void {
+  for (let i = 0; i < steps; i++) {
+    const a = (i / steps) * Math.PI * 2;
+    push(
+      0,
+      cy + Math.cos(a) * radius - cube / 2,
+      cz + Math.sin(a) * radius - cube / 2,
+      cube,
+      cube,
+      cube,
+      color,
+    );
+  }
+}
+
+/** 옆에서 본 자전거. 캐릭터가 그 위에 올라탄다. */
+export function buildBike(cam: CameraConfig = PROFILE_CAMERA): Face[] {
+  const faces: Face[] = [];
+  const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
+    box(faces, cam, x, y, z, w, d, h, c);
+
+  const REAR_Y = -3.4;
+  const FRONT_Y = 3.4;
+  const HUB_Z = 2.6;
+  const R = 2.5;
+
+  ring(B, REAR_Y, HUB_Z, R, 0.62, TYRE);
+  ring(B, FRONT_Y, HUB_Z, R, 0.62, TYRE);
+
+  // 프레임 — 대각선은 복셀이라 계단으로 만든다
+  B(0, -2.0, 5.0, 0.45, 3.9, 0.45, FRAME); // 탑 튜브
+  B(0, -2.2, 2.6, 0.45, 0.45, 2.6, FRAME); // 시트 튜브
+  B(0, -3.4, 2.4, 0.45, 1.6, 0.45, FRAME); // 체인 스테이
+  for (let i = 0; i < 5; i++) {
+    B(0, -1.7 + i * 0.75, 2.9 + i * 0.42, 0.45, 0.75, 0.45, FRAME); // 다운 튜브
+  }
+  for (let i = 0; i < 4; i++) {
+    B(0, 2.6 + i * 0.28, 5.0 - i * 0.72, 0.45, 0.5, 0.8, FRAME); // 앞 포크
+  }
+
+  B(0, -2.9, 5.5, 0.5, 1.5, 0.4, "#2c3a44"); // 안장
+  B(0, 2.8, 5.5, 0.5, 1.6, 0.4, "#2c3a44"); // 핸들바
+
+  faces.sort((a, b) => a.dep - b.dep);
+  return faces;
+}
+
+/**
+ * 원판 한 층 — 반지름 안에 드는 격자 칸만 채운다.
+ * 복셀에서 둥근 형태는 이렇게 층을 쌓아 만든다(헬멧 돔, 피자 판).
+ */
+function disc(
+  push: (x: number, y: number, z: number, w: number, d: number, h: number, c: string) => void,
+  radius: number,
+  z: number,
+  h: number,
+  color: string,
+  cell = 1,
+  /** 껍데기만 그린다 — 속을 채우면 내부 상자의 옆면이 깊이 정렬에서 이웃 앞으로
+   *  튀어나와 표면이 격자처럼 뚫려 보인다. 어차피 보이지 않는 부분이다. */
+  hollow = false,
+): void {
+  const steps = Math.ceil(radius / cell) + 1;
+  for (let ix = -steps; ix <= steps; ix++) {
+    for (let iy = -steps; iy <= steps; iy++) {
+      const x = ix * cell;
+      const y = iy * cell;
+      const d = Math.hypot(x + cell / 2, y + cell / 2);
+      if (d > radius) continue;
+      if (hollow && d < radius - cell) continue;
+      push(x, y, z, cell, cell, h, color);
+    }
+  }
+}
+
+/**
+ * 자전거 헬멧 — 빨간 돔 + 회색 챙 + 턱끈.
+ *
+ * 칸을 굵게(1.6) 잡는다. 1칸짜리로 쌓으면 계단이 잘게 갈라져 형태가 뭉개진다 —
+ * 복셀은 덩어리가 커야 실루엣이 읽힌다.
+ */
+export function buildHelmet(cam: CameraConfig = THUMB_CAMERA): Face[] {
+  const faces: Face[] = [];
+  const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
+    box(faces, cam, x, y, z, w, d, h, c);
+
+  const SHELL = "#c8302c";
+  const SHELL_TOP = "#dc4038";
+  const VISOR = "#c3c9ce";
+  const STRAP = "#a02622";
+  const CELL = 0.85;
+
+  // 구를 층으로 근사한다 — 반지름을 코사인으로 줄여야 돔이 되고, 선형이면 원뿔이 된다.
+  // 속은 채운다 — 껍데기만 두면 앞쪽 테두리 너머로 빈 속이 뚫려 보인다.
+  const LAYERS = 7;
+  const MAX_R = 4.6;
+  for (let i = 0; i < LAYERS; i++) {
+    const t = i / LAYERS;
+    const r = MAX_R * Math.cos((t * Math.PI) / 2.35);
+    const z = i * CELL;
+    disc(B, r, z, CELL + 0.05, i > 3 ? SHELL_TOP : SHELL, CELL);
+  }
+
+  // 챙 — 얼굴 쪽으로 튀어나온 회색 테
+  B(-4.0, -5.6, 0.2, 8.0, 1.4, 0.6, VISOR);
+
+  // 턱끈
+  B(-3.9, -3.4, -3.2, 0.7, 0.7, 3.2, STRAP);
+  B(3.2, -3.4, -3.2, 0.7, 0.7, 3.2, STRAP);
+  B(-3.9, -3.4, -3.4, 7.8, 0.7, 0.7, STRAP);
+
+  faces.sort((a, b) => a.dep - b.dep);
+  return faces;
+}
+
+/**
+ * 피자 한 판 — 헬멧과 나란히 놓이므로 같은 복셀로 짓는다.
+ *
+ * 원형은 격자 위에서 반지름 안에 드는 칸만 채워 만든다. 층을 쌓아 도우 → 소스 →
+ * 치즈 순으로 올리고, 토핑은 치즈 위에 개별 상자로 얹는다.
+ */
+export function buildPizza(cam: CameraConfig = PORTRAIT_CAMERA): Face[] {
+  const faces: Face[] = [];
+  const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
+    box(faces, cam, x, y, z, w, d, h, c);
+
+  const DOUGH = "#e0b878";
+  const SAUCE = "#d8342a";
+  const CHEESE = "#efeda8";
+  const PEPPERONI = "#cf3428";
+  const OLIVE = "#241f1f";
+  const PEPPER = "#3f9c35";
+  const MUSHROOM = "#9c7a52";
+
+  const R = 5.6;
+
+  disc(B, R, 0, 0.9, DOUGH); // 도우 + 크러스트 테두리
+  disc(B, R - 1.1, 0.9, 0.25, SAUCE); // 소스 링
+  disc(B, R - 2.0, 1.15, 0.2, CHEESE); // 치즈
+
+  // 토핑 — 페퍼로니는 2×2 로 조금 크게, 나머지는 한 칸
+  const PEPPERONIS: Array<[number, number]> = [
+    [-4, -2], [-1, -4], [2, -3], [-3, 1], [0, 0], [3, 0], [-2, 3], [1, 3],
+  ];
+  for (const [x, y] of PEPPERONIS) B(x, y, 1.35, 2, 2, 0.3, PEPPERONI);
+
+  const SMALL: Array<[number, number, string]> = [
+    [-2, -3, PEPPER], [1, -2, OLIVE], [4, -1, MUSHROOM], [-4, 0, PEPPER],
+    [2, 2, OLIVE], [-1, 4, MUSHROOM], [3, 3, PEPPER], [-4, 2, OLIVE],
+  ];
+  for (const [x, y, c] of SMALL) B(x, y, 1.35, 1, 1, 0.35, c);
+
+  faces.sort((a, b) => a.dep - b.dep);
+  return faces;
+}
