@@ -74,7 +74,10 @@ export function CrosswalkScene({
   // 헬멧을 썼다는 것은 자전거 스텝을 통과했다는 뜻이라, 자전거도 같이 탄다.
   const ridesBike = wearsHelmet;
   const dinoFaces = useMemo(
-    () => buildDino(dinoColor, undefined, wearsHelmet, ridesBike ? SCENE_BIKE_LIFT : 0),
+    () => buildDino(dinoColor, undefined, {
+        withHelmet: wearsHelmet,
+        lift: ridesBike ? SCENE_BIKE_LIFT : 0,
+      }),
     [dinoColor, wearsHelmet, ridesBike],
   );
   const bikeFaces = useMemo(

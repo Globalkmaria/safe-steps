@@ -29,7 +29,10 @@ function ModePreview({ mode, bodyColor }: { mode: CrossingMode; bodyColor: strin
   const bike = useMemo(() => buildBike(PROFILE_CAMERA, SCENE_BIKE_ORIGIN), []);
   // 타고 갈 때는 안장 높이로 올라타고, 끌고 갈 때는 땅에 내려선다.
   const rider = useMemo(
-    () => buildDino(bodyColor, PROFILE_CAMERA, true, mode === "ride" ? SCENE_BIKE_LIFT : 0),
+    () => buildDino(bodyColor, PROFILE_CAMERA, {
+      withHelmet: true,
+      lift: mode === "ride" ? SCENE_BIKE_LIFT : 0,
+    }),
     [bodyColor, mode],
   );
 

@@ -410,16 +410,28 @@ export function buildWorld(): Face[] {
 export const DINO_BUILD_Y = 15.5;
 
 /** 플레이어 캐릭터(공룡). 몸 색만 파라미터로 받는다. */
+export interface DinoOptions {
+  /** 머리에 헬멧을 씌운다 — 자전거 스텝을 통과한 뒤의 모습 */
+  withHelmet?: boolean;
+  /** 안장에 앉도록 통째로 들어올린다(자전거를 탈 때) */
+  lift?: number;
+  /** 앞치마를 두르고, 인사하는 팔은 따로 그리도록 한쪽을 비운다(엄마 공룡) */
+  apron?: { color: string; trim: string };
+  /**
+   * 카메라를 등지게 세운다.
+   *
+   * 원본 스펙은 -y 를 보고 있고, 기본값은 그것을 뒤집어 +y(카메라 쪽)를 보게 한다.
+   * 뒤집기를 끄면 원래대로 -y 를 보므로 정면 카메라에서는 뒷모습이 된다.
+   */
+  faceAway?: boolean;
+}
+
 export function buildDino(
   bodyColor: string,
   cam: CameraConfig = SCENE_CAMERA,
-  /** 머리에 헬멧을 씌운다 — 자전거 스텝을 통과한 뒤의 모습 */
-  withHelmet = false,
-  /** 안장에 앉도록 통째로 들어올린다(자전거를 탈 때) */
-  lift = 0,
-  /** 엄마 공룡용 — 앞치마를 두르고 인사하는 팔은 따로 그리도록 한쪽을 비운다 */
-  motherOptions?: { apronColor: string; apronTrim: string },
+  options: DinoOptions = {},
 ): Face[] {
+  const { withHelmet = false, lift = 0, apron, faceAway = false } = options;
   const faces: Face[] = [];
 
   // 원본 모델은 -y 를 향한다. 진행 방향을 왼쪽→오른쪽으로 뒤집었으므로 캐릭터도
@@ -487,14 +499,16 @@ export function buildDino(
   for (const [x, y, z, w, d, h, c] of specs) {
     // 엄마는 오른팔을 들어 인사하므로 몸통에서 빼고 따로 그린다.
     // 팔은 0.8×1.5×1.6 두 개뿐이라 치수로 구분하고, 그중 x 가 작은 쪽을 뺀다.
-    if (motherOptions && w === 0.8 && d === 1.5 && h === 1.6 && x > 4) continue;
-    box(faces, cam, spanX - x - w + 3.6, spanY - y - d + DINO_BUILD_Y, z + 1.2 + lift, w, d, h, c);
+    if (apron && w === 0.8 && d === 1.5 && h === 1.6 && x > 4) continue;
+    const fx = faceAway ? x : spanX - x - w;
+    const fy = faceAway ? y : spanY - y - d;
+    box(faces, cam, fx + 3.6, fy + DINO_BUILD_Y, z + 1.2 + lift, w, d, h, c);
   }
 
-  if (motherOptions) {
+  if (apron) {
     const MB = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
       box(faces, cam, x, y, z, w, d, h, c);
-    const { apronColor, apronTrim } = motherOptions;
+    const { color: apronColor, trim: apronTrim } = apron;
     // 앞치마 — 배(+y 쪽) 앞면에 덧댄다
     MB(4.1, 20.0, 2.0, 4.0, 0.35, 3.6, apronColor);
     MB(4.1, 19.98, 2.0, 4.0, 0.4, 0.4, apronTrim); // 아랫단
@@ -509,8 +523,8 @@ export function buildDino(
     const head = specs.find((sp) => sp[3] === 4.6 && sp[4] === 3.3);
     if (head) {
       const [hx, hy, hz, hw, hd, hh] = head;
-      const cx = spanX - hx - hw + 3.6 + hw / 2;
-      const cy = spanY - hy - hd + DINO_BUILD_Y + hd / 2;
+      const cx = (faceAway ? hx : spanX - hx - hw) + 3.6 + hw / 2;
+      const cy = (faceAway ? hy : spanY - hy - hd) + DINO_BUILD_Y + hd / 2;
       const top = hz + 1.2 + lift + hh;
 
       const HB = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
@@ -534,7 +548,7 @@ export function buildDino(
         }
       }
       // 챙 — 캐릭터가 +y 를 보므로 그쪽에 붙인다
-      HB(cx - 1.7, cy + 1.7, top - 0.45, 3.4, 0.8, 0.4, "#c3c9ce");
+      HB(cx - 1.7, cy + (faceAway ? -2.1 : 1.7), top - 0.45, 3.4, 0.8, 0.4, "#c3c9ce");
     }
   }
 
@@ -633,16 +647,20 @@ function ring(
 export const MOTHER_SHOULDER = { x: 3.5, y: 18.3, z: 4.9 };
 
 /** 들어 올려 흔드는 팔. 몸통과 따로 그려야 어깨를 축으로 돌릴 수 있다. */
-export function buildWavingArm(bodyColor: string, cam: CameraConfig): Face[] {
+export function buildWavingArm(
+  bodyColor: string,
+  cam: CameraConfig,
+  shoulder: { x: number; y: number; z: number } = MOTHER_SHOULDER,
+): Face[] {
   const faces: Face[] = [];
   const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
-    box(faces, cam, x, y, z, w, d, h, c);
+    box(faces, cam, shoulder.x + x, shoulder.y + y, shoulder.z + z, w, d, h, c);
 
-  // 어깨에서 위로 뻗은 팔. 어깨 높이(z 4.6)에서 시작해야 몸통과 붙어 보인다 —
+  // 어깨에서 위로 뻗은 팔. 어깨 높이에서 시작해야 몸통과 붙어 보인다 —
   // 위에서 시작하면 손만 공중에 뜬 것처럼 읽힌다.
-  B(2.9, 18.3, 4.6, 0.85, 1.6, 1.5, bodyColor);
-  B(2.6, 18.3, 6.0, 0.85, 1.6, 1.5, bodyColor);
-  B(2.3, 18.2, 7.4, 1.05, 1.8, 1.3, bodyColor);
+  B(-0.6, -0.8, -0.3, 0.85, 1.6, 1.5, bodyColor);
+  B(-0.9, -0.8, 1.1, 0.85, 1.6, 1.5, bodyColor);
+  B(-1.2, -0.9, 2.5, 1.05, 1.8, 1.3, bodyColor);
 
   faces.sort((a, b) => a.dep - b.dep);
   return faces;
