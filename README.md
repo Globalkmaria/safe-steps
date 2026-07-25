@@ -1,5 +1,7 @@
 # Safe Steps 🚸🧒
 
+Made with love by Maria, Rufina, & Yejin @ Builders Only 2 
+
 **세계의 모든 어린이가 안전하게 길을 건널 수 있도록 만들었습니다.**
 **Built so that children everywhere can cross the road safely.**
 
