@@ -43,7 +43,7 @@ const CAMERA_SCALE = 0.7;
  * CAMERA_PHI_DEG 를 바꾸면 이 값도 다시 재야 한다(브라우저에서 면들의 bounding box
  * 중심을 재서 스테이지 중심 520,360 과의 차이를 넣는다).
  */
-const CAMERA_OFFSET_X = -77;
+const CAMERA_OFFSET_X = -109;
 const CAMERA_OFFSET_Y = 27;
 
 
@@ -345,7 +345,7 @@ export function buildWorld(): Face[] {
   B(-13, 0, 0, CROSSING_X0 - -13, 14, 1.05, ROAD, undefined, GROUND);
   B(CROSSING_X1, 0, 0, 21 - CROSSING_X1, 14, 1.05, ROAD, undefined, GROUND);
   B(CROSSING_X0, 0, 0, CROSSING_X1 - CROSSING_X0, 14, 1.05, ROAD, stripes, GROUND); // 횡단보도
-  B(-13, 22, 0, 34, 2, 0.5, GRASS, undefined, GROUND);
+  B(-13, 22, 0, 34, 7, 0.5, GRASS, undefined, GROUND); // 건너편 — 학교가 앉는다
 
   // 신호등 — 기둥의 수직축을 중심으로 원본에서 90° 돌려세웠다.
   //
@@ -842,6 +842,47 @@ export function buildPizza(cam: CameraConfig = PORTRAIT_CAMERA): Face[] {
     [2, 2, OLIVE], [-1, 4, MUSHROOM], [3, 3, PEPPER], [-4, 2, OLIVE],
   ];
   for (const [x, y, c] of SMALL) B(x, y, 1.35, 1, 1, 0.35, c);
+
+  faces.sort((a, b) => a.dep - b.dep);
+  return faces;
+}
+
+
+/**
+ * 길 건너 학교. 마지막 스텝에서 "저기로 가는 거야" 를 보여주는 목적지다.
+ *
+ * 씬 카메라로만 그리므로 건물 하나를 통째로 짓는다 — 몸체, 지붕, 문, 창, 시계탑.
+ */
+export function buildSchool(cam: CameraConfig = SCENE_CAMERA): Face[] {
+  const faces: Face[] = [];
+  const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
+    box(faces, cam, x, y, z, w, d, h, c);
+
+  const WALL = "#f2e0c0";
+  const ROOF = "#b8503f";
+  const TRIM = "#d9c39c";
+  const DOOR = "#8a5a34";
+  const WINDOW = "#7ec2e8";
+
+  // 본관
+  B(-1, 23.2, 0.5, 13, 4.6, 6.2, WALL);
+  B(-1.6, 22.8, 6.7, 14.2, 5.4, 1.5, ROOF);
+  B(-0.6, 23.4, 8.2, 12.2, 4.2, 0.8, ROOF);
+
+  // 정문 — 도로 쪽(-y)을 향한다
+  B(4.6, 23.0, 0.5, 2.8, 0.4, 3.4, DOOR);
+  B(4.4, 22.95, 3.9, 3.2, 0.4, 0.5, TRIM);
+
+  // 창문 두 줄
+  for (let i = 0; i < 4; i++) {
+    B(0.2 + i * 2.6, 23.0, 1.6, 1.6, 0.35, 1.6, WINDOW);
+    B(0.2 + i * 2.6, 23.0, 4.2, 1.6, 0.35, 1.6, WINDOW);
+  }
+
+  // 시계탑
+  B(9.4, 23.6, 6.7, 2.6, 2.6, 3.4, WALL);
+  B(9.0, 23.2, 10.1, 3.4, 3.4, 1.0, ROOF);
+  B(9.9, 23.5, 8.0, 1.6, 0.3, 1.6, "#fdfbf3"); // 시계판
 
   faces.sort((a, b) => a.dep - b.dep);
   return faces;

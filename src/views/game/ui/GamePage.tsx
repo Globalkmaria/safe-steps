@@ -9,6 +9,8 @@ import { CrossingModeQuiz } from "@/views/game/ui/CrossingModeQuiz";
 import type { CrossingMode } from "@/views/game/ui/CrossingModeQuiz";
 import { SignalQuiz } from "@/views/game/ui/SignalQuiz";
 import type { SignalChoice } from "@/views/game/ui/SignalQuiz";
+import { WhereToCrossQuiz } from "@/views/game/ui/WhereToCrossQuiz";
+import type { CrossingPlace } from "@/views/game/ui/WhereToCrossQuiz";
 import { IntroScreen } from "@/views/game/ui/IntroScreen";
 import { useCrosswalkGame } from "@/views/game/model/use-crosswalk-game";
 
@@ -33,6 +35,10 @@ const ABORT_MS = 1400;
 const HELMET_ON_MS = 1600;
 /** 자전거에서 내리는 동작이 끝나고 다음 질문이 뜨기까지 */
 const DISMOUNT_MS = 1600;
+/** 횡단보도를 벗어나 도로에 들어섰다 되돌아오는 동작이 끝나기까지 */
+const STRAY_MS = 1600;
+/** 불이 초록으로 바뀐 것을 보고 난 뒤 마지막 질문이 뜨기까지 */
+const GREEN_BEAT_MS = 900;
 
 const BUBBLE_TEXT = {
   idle: "Get ready to ride to the crossing.",
@@ -47,9 +53,10 @@ const BUBBLE_TEXT = {
  * 이야기 순서.
  *  1. 자전거를 탈 때 무엇을 챙길까 (헬멧)
  *  2. 횡단보도에서 타고 갈까, 내려서 끌고 갈까
- *  3. 어느 불에 건널까 — 그리고 자전거를 끌고 건넌다
+ *  3. 어느 불에 건널까
+ *  4. 어디로 건널까 — 그리고 자전거를 끌고 학교로 건너간다
  */
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
 
 export function GamePage() {
   const game = useCrosswalkGame({
@@ -76,6 +83,11 @@ export function GamePage() {
   // 스텝 3 — 신호
   const [showSignalQuiz, setShowSignalQuiz] = useState(false);
   const [showSignalRetry, setShowSignalRetry] = useState(false);
+
+  // 스텝 4 — 어디로 건널까
+  const [showPlaceQuiz, setShowPlaceQuiz] = useState(false);
+  const [placeRetry, setPlaceRetry] = useState(false);
+  const [strayed, setStrayed] = useState(false);
   const [showFinish, setShowFinish] = useState(false);
 
   /** 신호가 초록이 되면 스스로 건넌다 — 아이에게 같은 판단을 두 번 시키지 않는다 */
@@ -98,6 +110,17 @@ export function GamePage() {
     const t = setTimeout(() => setShowSignalQuiz(true), DISMOUNT_MS);
     return () => clearTimeout(t);
   }, [step]);
+
+  // 스텝 4: 불이 초록으로 바뀌면 길 건너 학교를 보여주며 어디로 건널지 묻는다.
+  useEffect(() => {
+    if (step !== 3 || phase !== "green") return;
+    // 불이 바뀌는 순간을 눈으로 확인할 틈을 준 뒤 묻는다.
+    const t = setTimeout(() => {
+      setStep(4);
+      setShowPlaceQuiz(true);
+    }, GREEN_BEAT_MS);
+    return () => clearTimeout(t);
+  }, [step, phase]);
 
   // 빨간불에 나서려다 멈추는 동작을 다 보여준 뒤 실패 팝업.
   useEffect(() => {
@@ -134,15 +157,26 @@ export function GamePage() {
     setStep(3);
   };
 
-  /** 스텝 3 — 초록이면 건너고, 빨강이면 나섰다가 멈춘다 */
+  /**
+   * 스텝 3 — 초록을 고르면 불만 바꾼다. 아직 건너지 않는다:
+   * 어디로 건널지는 다음 스텝에서 묻는다.
+   */
   const handleSignalChoice = (picked: SignalChoice) => {
     setShowSignalQuiz(false);
-    if (picked === "green") {
-      setAutoCross(true);
-      pressButton();
-    } else {
-      walk();
+    if (picked === "green") pressButton();
+    else walk();
+  };
+
+  /** 스텝 4 — 횡단보도로 건너야 정답. 무단횡단은 도로에 들어섰다가 되돌아온다. */
+  const handlePlaceChoice = (place: CrossingPlace) => {
+    setShowPlaceQuiz(false);
+    if (place === "crossing") {
+      setAutoCross(true); // 불은 이미 초록이라 곧바로 건너기 시작한다
+      return;
     }
+    setStrayed(true);
+    setTimeout(() => setStrayed(false), STRAY_MS - 400);
+    setTimeout(() => setPlaceRetry(true), STRAY_MS);
   };
 
   const handleSignalRetry = () => {
@@ -164,6 +198,9 @@ export function GamePage() {
     setDismounted(false);
     setShowSignalQuiz(false);
     setShowSignalRetry(false);
+    setShowPlaceQuiz(false);
+    setPlaceRetry(false);
+    setStrayed(false);
     setShowFinish(false);
     setAutoCross(false);
     reset();
@@ -184,6 +221,8 @@ export function GamePage() {
             dinoColor={DINO_COLOR}
             wearsHelmet={wearsHelmet}
             dismounted={dismounted}
+            showSchool={step === 4}
+            strayed={strayed}
             crossSeconds={CROSS_SECONDS}
             onWalk={walk}
           />
@@ -260,11 +299,29 @@ export function GamePage() {
         />
       )}
 
-      {step === 3 && showFinish && (
+      {/* --- 스텝 4: 어디로 건널까 --- */}
+      {step === 4 && showPlaceQuiz && (
+        <WhereToCrossQuiz bodyColor={DINO_COLOR} onSelect={handlePlaceChoice} />
+      )}
+
+      {step === 4 && placeRetry && (
+        <ResultDialog
+          tone="retry"
+          title="Not there!"
+          message="Stepping straight into the road is dangerous. Drivers do not expect you there. Use the crossing."
+          actionLabel="Try again"
+          onAction={() => {
+            setPlaceRetry(false);
+            setShowPlaceQuiz(true);
+          }}
+        />
+      )}
+
+      {step === 4 && showFinish && (
         <ResultDialog
           tone="success"
-          title="You crossed safely!"
-          message="Helmet on, off the bike, and across on the green light. That is how it is done!"
+          title="You made it to school!"
+          message="Helmet on, off the bike, waited for green, and crossed on the crossing. That is how it is done!"
           actionLabel="Play again"
           onAction={handleRestartAll}
         />

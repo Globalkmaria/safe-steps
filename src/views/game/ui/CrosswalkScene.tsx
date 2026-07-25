@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import {
   buildBike,
   buildDino,
+  buildSchool,
   buildWorld,
   CAMERA_TRANSFORM,
   DINO_BUILD_Y,
@@ -35,6 +36,10 @@ interface CrosswalkSceneProps {
   wearsHelmet?: boolean;
   /** 자전거에서 내렸다 — 캐릭터만 안장 높이에서 땅으로 내려온다 */
   dismounted?: boolean;
+  /** 길 건너 학교를 보여준다 — 마지막 스텝의 목적지 */
+  showSchool?: boolean;
+  /** 무단횡단 — 횡단보도를 벗어나 도로로 들어섰다가 되돌아온다 */
+  strayed?: boolean;
   crossSeconds: number;
   onWalk: () => void;
 }
@@ -52,6 +57,8 @@ export function CrosswalkScene({
   dinoColor,
   wearsHelmet = false,
   dismounted = false,
+  showSchool = false,
+  strayed = false,
   crossSeconds,
   onWalk,
 }: CrosswalkSceneProps) {
@@ -85,6 +92,7 @@ export function CrosswalkScene({
     [ridesBike],
   );
   const { rows, columns } = useMemo(() => signalPixels(isGreen), [isGreen]);
+  const schoolFaces = useMemo(() => (showSchool ? buildSchool(SCENE_CAMERA) : []), [showSchool]);
 
   const litColor = isGreen ? "#5cf06a" : "#ff5347";
 
@@ -119,12 +127,24 @@ export function CrosswalkScene({
   // 내리는 동작은 모델을 다시 짓지 않고 화면 좌표로만 내린다 — 태운 높이가 지오메트리에
   // 박혀 있어 매 프레임 다시 지으면 비싸고, 전환도 부드럽지 않다.
   const dropped = screenDelta(0, 0, -SCENE_BIKE_LIFT * UNIT);
+  // 횡단보도 오른쪽 끝 바깥으로 벗어나며 도로에 발을 들이는 이동
+  const stray = screenDelta(11 * UNIT, -8.5 * UNIT, 0);
+  // 내리는 것은 캐릭터만의 동작이라 캐릭터에만 건다.
   const dismountStyle: CSSProperties = {
     position: "absolute",
     left: 0,
     top: 0,
     transform: dismounted ? `translate(${dropped.dx}px,${dropped.dy}px)` : "none",
     transition: "transform 1s ease-in-out",
+  };
+
+  // 무단횡단은 자전거를 끌고 함께 벗어나는 것이므로 둘 다 감싸서 옮긴다.
+  const strayStyle: CSSProperties = {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    transform: strayed ? `translate(${stray.dx}px,${stray.dy}px)` : "none",
+    transition: "transform .9s ease-in-out",
   };
 
   return (
@@ -158,6 +178,9 @@ export function CrosswalkScene({
               {worldFaces.map((face, i) => (
                 <div key={`w${i}`} style={face.style} />
               ))}
+              {schoolFaces.map((face, i) => (
+                <div key={`s${i}`} style={face.style} />
+              ))}
 
               <div style={panelStyle}>
                 {rows.flatMap((row, r) =>
@@ -190,6 +213,7 @@ export function CrosswalkScene({
                   transition: instant ? "none" : `transform ${crossSeconds}s linear`,
                 }}
               >
+                <div style={strayStyle}>
                 <div
                   aria-hidden
                   style={{
@@ -226,6 +250,7 @@ export function CrosswalkScene({
                       <div key={`d${i}`} style={face.style} />
                     ))}
                   </div>
+                </div>
                 </div>
               </button>
             </div>
