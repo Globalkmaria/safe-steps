@@ -16,13 +16,41 @@ export const UNIT = 20;
 export const STAGE_WIDTH = 1040;
 export const STAGE_HEIGHT = 720;
 
-const CAMERA_THETA = (52 * Math.PI) / 180;
-const CAMERA_PHI = (-24 * Math.PI) / 180;
+/** 카메라 기울기(위에서 내려다보는 각) */
+const CAMERA_THETA_DEG = 52;
+
+/**
+ * 카메라 회전(수평으로 도는 각).
+ *
+ * 원본 프로토타입은 -24° 였다. 목표는 셋이다 —
+ * (1) 캐릭터가 뒷모습을 보이며 걸어갈 것, (2) 신호등이 화면 오른쪽에 설 것,
+ * (3) 신호등 패널이 카메라를 향해 빨강/초록이 보일 것.
+ *
+ * 180° 회전은 (1)을 만족할 수 없다 — 뒷모습의 정반대는 앞모습이다.
+ * 실측으로 156° 에서 셋이 동시에 성립했다.
+ *
+ * ⚠️ 이 값 하나가 세 곳을 동시에 지배한다: CSS 카메라 transform, 면 깊이 정렬(depth),
+ * 캐릭터 이동의 화면 방향(screenDelta). 셋이 어긋나면 겹침 순서가 뒤집히거나
+ * 캐릭터가 엉뚱한 방향으로 걷는다. 그래서 상수 하나에서 전부 파생시킨다.
+ */
+const CAMERA_PHI_DEG = 156;
+
+const CAMERA_THETA = (CAMERA_THETA_DEG * Math.PI) / 180;
+const CAMERA_PHI = (CAMERA_PHI_DEG * Math.PI) / 180;
 const CAMERA_SCALE = 0.7;
+
+/**
+ * 회전 후 씬이 스테이지 중앙에 오도록 하는 보정값.
+ * 각도에 종속적이다 — 원본(-24°)의 (3,135) 를 156° 기준으로 실측해 다시 잡았다.
+ * CAMERA_PHI_DEG 를 바꾸면 이 값도 다시 재야 한다(브라우저에서 면들의 bounding box
+ * 중심을 재서 스테이지 중심 520,360 과의 차이를 넣는다).
+ */
+const CAMERA_OFFSET_X = 1;
+const CAMERA_OFFSET_Y = -80;
 
 /** 모든 면에 공통으로 적용되는 카메라 transform */
 export const CAMERA_TRANSFORM =
-  "translate(3px,135px) scale(.7) rotateX(52deg) rotateZ(-24deg)";
+  `translate(${CAMERA_OFFSET_X}px,${CAMERA_OFFSET_Y}px) scale(${CAMERA_SCALE}) rotateX(${CAMERA_THETA_DEG}deg) rotateZ(${CAMERA_PHI_DEG}deg)`;
 
 export interface Face {
   /** 정렬용 깊이. 작을수록 뒤. */
