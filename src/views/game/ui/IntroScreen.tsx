@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   buildDino,
   buildWavingArm,
@@ -18,6 +18,14 @@ const APRON_TRIM = "#e0796d";
 const MOTHER_CAMERA = { ...PORTRAIT_CAMERA, scale: 1.45 };
 /** 아기는 엄마보다 작다 */
 const CHILD_CAMERA = { ...PORTRAIT_CAMERA, scale: 1.0 };
+
+/**
+ * 두 캐릭터가 놓이는 무대 크기. 배치값(NUDGE)이 이 크기의 중심을 기준으로 잡혀 있어
+ * 무대가 줄어들면 캐릭터가 밖으로 밀려난다. 그래서 무대는 크기를 고정하고,
+ * 화면이 좁으면 통째로 축소한다 — 게임 씬과 같은 방식이다.
+ */
+const STAGE_W = 420;
+const STAGE_H = 380;
 
 /** 인사하는 팔이 돌아갈 어깨. 몸을 돌려 세운 아기는 y 가 다르다. */
 const MOTHER_SHOULDER = { x: 3.5, y: 18.3, z: 4.9 };
@@ -56,12 +64,36 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
     [],
   );
 
+  // 무대를 남은 공간에 맞춰 축소한다. 확대는 하지 않는다(1 이 상한).
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return;
+      const { width, height } = entry.contentRect;
+      setScale(Math.min(1, width / STAGE_W, height / STAGE_H));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 p-6"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-4"
       style={{ background: "linear-gradient(#ffe9c2 0%, #ffd7d2 55%, #ffeede 100%)" }}
     >
-      <div className="relative overflow-hidden" style={{ width: 420, height: 380 }}>
+      <div ref={stageRef} className="relative min-h-0 w-full max-w-[420px] flex-1">
+      <div
+        className="absolute left-1/2 top-1/2 overflow-hidden"
+        style={{
+          width: STAGE_W,
+          height: STAGE_H,
+          transform: `translate(-50%,-50%) scale(${scale})`,
+        }}
+      >
         {/* 엄마 — 뒤쪽에 선다 */}
         <div className="absolute left-1/2 top-1/2 h-0 w-0" style={{ transform: MOTHER_NUDGE }}>
           {motherBody.map((face, i) => (
@@ -103,15 +135,16 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
           </div>
         </div>
       </div>
+      </div>
 
-      <p className="rounded-[2rem] border-8 border-white bg-[#fffdf7] px-8 py-5 text-center font-[family-name:var(--font-baloo)] text-3xl font-extrabold text-slate-800 shadow-[0_14px_0_rgba(30,60,80,.16)]">
+      <p className="shrink-0 rounded-[2rem] border-4 border-white bg-[#fffdf7] px-6 py-3 text-center font-[family-name:var(--font-baloo)] text-2xl font-extrabold text-slate-800 shadow-[0_10px_0_rgba(30,60,80,.16)] sm:border-8 sm:px-8 sm:py-5 sm:text-3xl">
         Have a good day at school!
       </p>
 
       <button
         type="button"
         onClick={onStart}
-        className="min-h-14 rounded-3xl border-4 border-white/90 px-10 py-4 text-2xl font-extrabold text-white shadow-[0_8px_0_#3b7d21] transition duration-150 hover:-translate-y-1 hover:brightness-110 hover:shadow-[0_12px_0_#3b7d21] active:translate-y-1 active:shadow-[0_4px_0_#3b7d21]"
+        className="min-h-14 shrink-0 rounded-3xl border-4 border-white/90 px-10 py-3 text-xl font-extrabold text-white shadow-[0_8px_0_#3b7d21] sm:py-4 sm:text-2xl transition duration-150 hover:-translate-y-1 hover:brightness-110 hover:shadow-[0_12px_0_#3b7d21] active:translate-y-1 active:shadow-[0_4px_0_#3b7d21]"
         style={{ background: "linear-gradient(#6fca4a,#4da12c)" }}
       >
         Bye, Mum!
