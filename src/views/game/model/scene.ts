@@ -958,6 +958,60 @@ export function buildSchool(cam: CameraConfig = SCENE_CAMERA): Face[] {
   B(SIGN_X + 0.7, FACE - 1.15, SIGN_Z + 1.95, 3.4, 0.25, 0.45, SIGN_INK);
   B(SIGN_X + 0.7, FACE - 1.15, SIGN_Z + 1.1, 2.7, 0.25, 0.45, SIGN_INK);
 
+  // 성조기 — 미국 학교는 국기를 단다. 학교임을 알리는 또 하나의 신호다.
+  const FLAG_RED = "#b22234";
+  const FLAG_WHITE = "#f7f5f0";
+  const FLAG_NAVY = "#3c3b6e";
+
+  const POLE_X = X0 + 11.4;
+  const POLE_Y = FRONT + 2.4;
+  const POLE_Z = H + 0.9; // 지붕면 위
+  const POLE_H = 5.6;
+  B(POLE_X, POLE_Y, POLE_Z, 0.3, 0.3, POLE_H, "#e8e4da");
+  B(POLE_X - 0.15, POLE_Y - 0.15, POLE_Z + POLE_H, 0.6, 0.6, 0.35, "#d8ac3a"); // 깃봉
+
+  // 붉은 줄 넷과 흰 줄 셋 — 13줄은 이 크기에서 뭉개진다. 왼쪽 위에 파란 칸톤.
+  const STRIPE_H = 0.34;
+  const FLAG_W = 3.2;
+  const FLAG_Z = POLE_Z + POLE_H - STRIPE_H * 7 - 0.25;
+  for (let i = 0; i < 7; i++) {
+    B(
+      POLE_X + 0.28,
+      POLE_Y + 0.03,
+      FLAG_Z + i * STRIPE_H,
+      FLAG_W,
+      0.22,
+      STRIPE_H,
+      i % 2 === 0 ? FLAG_RED : FLAG_WHITE,
+    );
+  }
+  // 칸톤은 줄무늬보다 좁아서 중심점 기준 정렬로는 줄무늬 뒤로 밀린다.
+  // y 를 앞으로 빼는 것만으로는 안 되고, 깊이 바이어스로 앞에 고정해야 한다.
+  B(
+    POLE_X + 0.28,
+    POLE_Y - 0.04,
+    FLAG_Z + STRIPE_H * 4,
+    FLAG_W * 0.42,
+    0.24,
+    STRIPE_H * 3,
+    FLAG_NAVY,
+    60,
+  );
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 2; j++) {
+      B(
+        POLE_X + 0.45 + i * 0.34,
+        POLE_Y - 0.1,
+        FLAG_Z + STRIPE_H * 4.35 + j * 0.36,
+        0.18,
+        0.1,
+        0.18,
+        FLAG_WHITE,
+        90,
+      );
+    }
+  }
+
   faces.sort((a, b) => a.dep - b.dep);
   return faces;
 }
