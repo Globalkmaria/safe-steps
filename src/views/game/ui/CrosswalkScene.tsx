@@ -176,10 +176,10 @@ export function CrosswalkScene({
           >
             <div className="absolute left-1/2 top-1/2 h-0 w-0">
               {worldFaces.map((face, i) => (
-                <div key={`w${i}`} style={face.style} />
+                <div key={`w${i}`} className={face.className} style={face.style} />
               ))}
               {schoolFaces.map((face, i) => (
-                <div key={`s${i}`} style={face.style} />
+                <div key={`s${i}`} className={face.className} style={face.style} />
               ))}
 
               <div style={panelStyle}>
@@ -243,11 +243,11 @@ export function CrosswalkScene({
                   }}
                 >
                   {bikeFaces.map((face, i) => (
-                    <div key={`b${i}`} style={face.style} />
+                    <div key={`b${i}`} className={face.className} style={face.style} />
                   ))}
                   <div style={dismountStyle}>
                     {dinoFaces.map((face, i) => (
-                      <div key={`d${i}`} style={face.style} />
+                      <div key={`d${i}`} className={face.className} style={face.style} />
                     ))}
                   </div>
                 </div>

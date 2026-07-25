@@ -209,3 +209,17 @@ textarea {
     transform: rotate(16deg);
   }
 }
+
+/**
+ * 복셀 면에 깔리는 격자 무늬.
+ *
+ * 인라인 style 로 넣으면 프로덕션 빌드의 미니파이어가 두 그라디언트 사이의
+ * `px), ` 를 삼켜 값이 깨진다. 괄호가 닫히지 않아 뒤따르는 width·height 선언까지
+ * 함께 무효가 되고, 결과적으로 모든 면이 크기 0 이 되어 화면이 텅 빈다.
+ * 클래스로 두면 미니파이어의 손이 닿지 않고, 4천 번 반복되던 문자열도 사라진다.
+ */
+.voxel-face {
+  background-image:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.09) 0 1px, rgba(0, 0, 0, 0) 1px 20px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.09) 0 1px, rgba(0, 0, 0, 0) 1px 20px);
+}

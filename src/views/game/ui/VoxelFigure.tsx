@@ -35,7 +35,7 @@ export function VoxelFigure({
     >
       <div className="absolute left-1/2 top-1/2 h-0 w-0" style={{ transform: nudge }}>
         {faces.map((face, i) => (
-          <div key={i} style={face.style} />
+          <div key={i} className={face.className} style={face.style} />
         ))}
       </div>
     </div>

@@ -31,7 +31,7 @@ export function DinoFace({
       {/* 모델은 월드 좌표에 세워져 있으므로, 상자 중앙으로 끌어와야 화면에 들어온다. */}
       <div className="absolute left-1/2 top-1/2 h-0 w-0" style={{ transform: PORTRAIT_NUDGE }}>
         {faces.map((face, i) => (
-          <div key={i} style={face.style} />
+          <div key={i} className={face.className} style={face.style} />
         ))}
       </div>
     </div>

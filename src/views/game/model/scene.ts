@@ -136,6 +136,8 @@ export interface Face {
   /** 정렬용 깊이. 작을수록 뒤. */
   dep: number;
   style: CSSProperties;
+  /** 격자 무늬 클래스. 윗면에 별도 무늬(횡단보도 줄무늬)를 깔면 비운다. */
+  className?: string;
 }
 
 /** hex 색을 배율만큼 밝게/어둡게 */
@@ -145,13 +147,11 @@ export function shade(hex: string, factor: number): string {
   return `rgb(${clamp((n >> 16) & 255)},${clamp((n >> 8) & 255)},${clamp(n & 255)})`;
 }
 
-/** 면에 깔리는 격자 무늬 — 복셀 느낌을 주는 요소 */
-function gridImage(): string {
-  return (
-    `repeating-linear-gradient(90deg, rgba(0,0,0,.09) 0 1px, rgba(0,0,0,0) 1px ${UNIT}px), ` +
-    `repeating-linear-gradient(0deg, rgba(0,0,0,.09) 0 1px, rgba(0,0,0,0) 1px ${UNIT}px)`
-  );
-}
+/**
+ * 면에 깔리는 격자 무늬는 CSS 클래스(.voxel-face)로 둔다.
+ * 인라인으로 넣으면 프로덕션 미니파이어가 값을 깨뜨린다 — globals.css 의 설명 참고.
+ */
+const GRID_CLASS = "voxel-face";
 
 /** 월드 좌표의 화면상 깊이 */
 export function depth(ex: number, ey: number, ez: number): number {
@@ -227,7 +227,6 @@ function box(
   depthBias = 0,
 ): void {
   const U = UNIT;
-  const g = gridImage();
   const C = cameraTransform(cam);
   const th = (cam.thetaDeg * Math.PI) / 180;
   const ph = (cam.phiDeg * Math.PI) / 180;
@@ -244,54 +243,54 @@ function box(
     left: 0,
     top: 0,
     transformOrigin: "0 0",
-    backgroundImage: g,
   };
 
   // 오른쪽 옆면
   out.push({
     dep,
+    className: GRID_CLASS,
     style: {
       ...base,
       width: dp * U,
       height: h * U,
       background: shade(col, 0.74),
-      backgroundImage: g,
       transform: `${C} translate3d(${(x + w) * U}px,${-y * U}px,${(z + h) * U}px) rotateX(-90deg) rotateY(90deg)`,
     },
   });
   // 왼쪽 옆면
   out.push({
     dep,
+    className: GRID_CLASS,
     style: {
       ...base,
       width: dp * U,
       height: h * U,
       background: shade(col, 0.8),
-      backgroundImage: g,
       transform: `${C} translate3d(${x * U}px,${-(y + dp) * U}px,${(z + h) * U}px) rotateX(-90deg) rotateY(-90deg)`,
     },
   });
   // 앞면
   out.push({
     dep,
+    className: GRID_CLASS,
     style: {
       ...base,
       width: w * U,
       height: h * U,
       background: shade(col, 0.9),
-      backgroundImage: g,
       transform: `${C} translate3d(${x * U}px,${-y * U}px,${(z + h) * U}px) rotateX(-90deg)`,
     },
   });
   // 윗면
   out.push({
     dep,
+    className: topImage ? undefined : GRID_CLASS,
     style: {
       ...base,
       width: w * U,
       height: dp * U,
       backgroundColor: shade(col, 1.14),
-      backgroundImage: topImage ?? g,
+      ...(topImage ? { backgroundImage: topImage } : {}),
       transform: `${C} translate3d(${x * U}px,${-(y + dp) * U}px,${(z + h) * U}px)`,
     },
   });

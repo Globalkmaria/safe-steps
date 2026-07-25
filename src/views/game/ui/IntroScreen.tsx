@@ -97,7 +97,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
         {/* 엄마 — 뒤쪽에 선다 */}
         <div className="absolute left-1/2 top-1/2 h-0 w-0" style={{ transform: MOTHER_NUDGE }}>
           {motherBody.map((face, i) => (
-            <div key={`m${i}`} style={face.style} />
+            <div key={`m${i}`} className={face.className} style={face.style} />
           ))}
           <div
             style={{
@@ -109,7 +109,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
             }}
           >
             {motherArm.map((face, i) => (
-              <div key={`ma${i}`} style={face.style} />
+              <div key={`ma${i}`} className={face.className} style={face.style} />
             ))}
           </div>
         </div>
@@ -117,7 +117,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
         {/* 아기 — 엄마보다 앞이므로 나중에 그려 위에 오게 한다 */}
         <div className="absolute left-1/2 top-1/2 h-0 w-0" style={{ transform: CHILD_NUDGE }}>
           {childBody.map((face, i) => (
-            <div key={`c${i}`} style={face.style} />
+            <div key={`c${i}`} className={face.className} style={face.style} />
           ))}
           <div
             style={{
@@ -130,7 +130,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
             }}
           >
             {childArm.map((face, i) => (
-              <div key={`ca${i}`} style={face.style} />
+              <div key={`ca${i}`} className={face.className} style={face.style} />
             ))}
           </div>
         </div>
