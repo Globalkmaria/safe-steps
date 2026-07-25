@@ -208,7 +208,9 @@ export function buildWorld(): Face[] {
   ) => box(faces, x, y, z, w, dp, h, col, topImage, depthBias);
 
   const roadTop = shade(ROAD, 1.14);
-  const stripes = `repeating-linear-gradient(90deg, ${STRIPE} 0 ${1.4 * UNIT}px, ${roadTop} ${1.4 * UNIT}px ${2.4 * UNIT}px)`;
+  // 0deg = 가로 줄무늬. 원본은 90deg(세로)였는데, 카메라를 90° 돌리면서 줄무늬가
+  // 진행 방향과 어긋났다. 텍스처도 같이 90° 돌린다.
+  const stripes = `repeating-linear-gradient(0deg, ${STRIPE} 0 ${1.4 * UNIT}px, ${roadTop} ${1.4 * UNIT}px ${2.4 * UNIT}px)`;
 
   // 지면.
   //
@@ -235,8 +237,8 @@ export function buildWorld(): Face[] {
   // 받침과 기둥은 축 대칭이라 좌표가 그대로고, 함체와 버튼함만 가로·세로가 뒤바뀐다.
   B(-3.6, 15.1, 1.2, 1.8, 1.8, 0.5, POST); // 받침
   B(-3.2, 15.5, 1.6, 1, 1, 8.2, POST); // 기둥
-  B(-4.3, 14.4, 9.6, 2.1, 3.2, 4.1, POST); // 함체 (원본 3.2×2.1 → 2.1×3.2)
-  B(-3.4, 14.65, 3.3, 0.4, 2.5, 3.1, "#4b525b"); // 버튼함 (원본 2.5×0.4 → 0.4×2.5)
+  B(HEAD_X, HEAD_Y, HEAD_Z, HEAD_W, HEAD_D, HEAD_H, POST); // 함체
+  B(-3.4, 14.65, 3.3, 0.4, 2.5, 3.1, "#4b525b"); // 제어함
 
   // 나무
   B(13.4, 15.2, 1.2, 1, 1, 2.4, BROWN);
@@ -367,5 +369,30 @@ export function signalPixels(isGreen: boolean): { rows: string[]; columns: numbe
 /** 신호등을 기둥의 수직축으로 돌린 각. 함체 AABB 회전과 짝을 이룬다. */
 export const SIGNAL_TURN_DEG = -90;
 
-/** 돌아간 함체에서 패널·버튼이 붙는 면의 x 좌표 */
-export const SIGNAL_FACE_X = -4.35;
+/**
+ * 신호등 머리 크기 배율(원본 = 1).
+ *
+ * 이 게임에서 아이가 "지금 건너도 되는가" 를 판단할 근거는 신호색 하나뿐이다.
+ * 씬이 중앙 열(약 512px)에 맞춰 절반 크기로 축소돼 렌더되므로, 원본 크기로는
+ * 정작 읽어야 할 것이 가장 안 읽힌다. 함체와 패널이 이 값 하나로 같이 커진다.
+ */
+const SIGNAL_SCALE = 1.4;
+
+/** 기둥 중심 y. 함체와 패널을 여기에 맞춰 세운다. */
+const POST_CENTER_Y = 16.0;
+
+const HEAD_W = 2.1 * SIGNAL_SCALE;
+const HEAD_D = 3.2 * SIGNAL_SCALE;
+const HEAD_H = 4.1 * SIGNAL_SCALE;
+/** 기둥 바깥면(-2.2)에 붙이고 카메라 쪽으로 자란다 */
+const HEAD_X = -2.2 - HEAD_W;
+const HEAD_Y = POST_CENTER_Y - HEAD_D / 2;
+const HEAD_Z = 9.6;
+
+/** 패널이 붙는 함체 앞면 — 살짝 띄워 z-fighting 을 피한다 */
+export const SIGNAL_FACE_X = HEAD_X - 0.05;
+export const SIGNAL_PANEL_W = 2.5 * SIGNAL_SCALE;
+export const SIGNAL_PANEL_H = 3.1 * SIGNAL_SCALE;
+/** 함체 앞면 안에서 가로·세로 모두 가운데 */
+export const SIGNAL_PANEL_Y = POST_CENTER_Y - SIGNAL_PANEL_W / 2;
+export const SIGNAL_PANEL_Z = HEAD_Z + HEAD_H - (HEAD_H - SIGNAL_PANEL_H) / 2;

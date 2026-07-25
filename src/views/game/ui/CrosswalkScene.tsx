@@ -10,6 +10,10 @@ import {
   screenDelta,
   signalPixels,
   SIGNAL_FACE_X,
+  SIGNAL_PANEL_H,
+  SIGNAL_PANEL_W,
+  SIGNAL_PANEL_Y,
+  SIGNAL_PANEL_Z,
   SIGNAL_TURN_DEG,
   STAGE_HEIGHT,
   STAGE_WIDTH,
@@ -67,8 +71,8 @@ export function CrosswalkScene({
     left: 0,
     top: 0,
     transformOrigin: "0 0",
-    width: 2.5 * UNIT,
-    height: 3.1 * UNIT,
+    width: SIGNAL_PANEL_W * UNIT,
+    height: SIGNAL_PANEL_H * UNIT,
     display: "grid",
     gridTemplateColumns: `repeat(${columns},1fr)`,
     gap: 1,
@@ -79,7 +83,7 @@ export function CrosswalkScene({
     borderRadius: 3,
     // 함체를 90° 돌린 것에 맞춰 패널도 같이 돌린다. rotateZ 가 월드 수직축 회전이고,
     // rotateX(-90deg) 이 평면을 세운다. 순서가 바뀌면 엉뚱한 축으로 돈다.
-    transform: `${CAMERA_TRANSFORM} translate3d(${SIGNAL_FACE_X * UNIT}px,${-14.55 * UNIT}px,${13.1 * UNIT}px) rotateZ(${SIGNAL_TURN_DEG}deg) rotateX(-90deg)`,
+    transform: `${CAMERA_TRANSFORM} translate3d(${SIGNAL_FACE_X * UNIT}px,${-SIGNAL_PANEL_Y * UNIT}px,${SIGNAL_PANEL_Z * UNIT}px) rotateZ(${SIGNAL_TURN_DEG}deg) rotateX(-90deg)`,
     animation:
       phase === "oops"
         ? "ss-flash .5s steps(1,end) 3"
