@@ -35,8 +35,6 @@ const CAMERA_THETA_DEG = 52;
  */
 const CAMERA_PHI_DEG = 66;
 
-const CAMERA_THETA = (CAMERA_THETA_DEG * Math.PI) / 180;
-const CAMERA_PHI = (CAMERA_PHI_DEG * Math.PI) / 180;
 const CAMERA_SCALE = 0.7;
 
 /**
@@ -48,9 +46,53 @@ const CAMERA_SCALE = 0.7;
 const CAMERA_OFFSET_X = -77;
 const CAMERA_OFFSET_Y = 27;
 
-/** 모든 면에 공통으로 적용되는 카메라 transform */
-export const CAMERA_TRANSFORM =
-  `translate(${CAMERA_OFFSET_X}px,${CAMERA_OFFSET_Y}px) scale(${CAMERA_SCALE}) rotateX(${CAMERA_THETA_DEG}deg) rotateZ(${CAMERA_PHI_DEG}deg)`;
+
+/**
+ * 카메라 설정. 같은 복셀 모델을 다른 각도로 그리기 위해 파라미터로 뺐다 —
+ * 씬은 캐릭터 뒷모습을 보지만, 팝업의 초상은 정면을 봐야 한다.
+ */
+export interface CameraConfig {
+  thetaDeg: number;
+  phiDeg: number;
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+}
+
+/** 게임 화면의 카메라 */
+export const SCENE_CAMERA: CameraConfig = {
+  thetaDeg: CAMERA_THETA_DEG,
+  phiDeg: CAMERA_PHI_DEG,
+  scale: CAMERA_SCALE,
+  offsetX: CAMERA_OFFSET_X,
+  offsetY: CAMERA_OFFSET_Y,
+};
+
+/**
+ * 팝업 초상용 카메라.
+ *
+ * phiDeg 0/180 처럼 90의 배수여야 상자의 한 면이 카메라와 정면으로 마주 본다 —
+ * 씬처럼 비스듬한 각이면 얼굴이 3/4 측면으로 보인다. 캐릭터가 +y 를 향하므로 180 이다.
+ * thetaDeg 는 클수록 눈높이다(작을수록 위에서 내려다본다).
+ * 중앙 정렬은 DinoFace 의 PORTRAIT_NUDGE 가 맡는다.
+ */
+export const PORTRAIT_CAMERA: CameraConfig = {
+  thetaDeg: 78,
+  phiDeg: 180,
+  scale: 0.64,
+  offsetX: 0,
+  offsetY: 0,
+};
+
+function cameraTransform(c: CameraConfig): string {
+  return `translate(${c.offsetX}px,${c.offsetY}px) scale(${c.scale}) rotateX(${c.thetaDeg}deg) rotateZ(${c.phiDeg}deg)`;
+}
+
+const CAMERA_THETA = (CAMERA_THETA_DEG * Math.PI) / 180;
+const CAMERA_PHI = (CAMERA_PHI_DEG * Math.PI) / 180;
+
+/** 씬 카메라의 transform — 신호등 패널처럼 씬에 직접 얹는 요소가 쓴다 */
+export const CAMERA_TRANSFORM = cameraTransform(SCENE_CAMERA);
 
 export interface Face {
   /** 정렬용 깊이. 작을수록 뒤. */
@@ -112,6 +154,7 @@ export function screenDelta(
  */
 function box(
   out: Face[],
+  cam: CameraConfig,
   x: number,
   y: number,
   z: number,
@@ -124,8 +167,17 @@ function box(
 ): void {
   const U = UNIT;
   const g = gridImage();
-  const C = CAMERA_TRANSFORM;
-  const dep = depth((x + w / 2) * U, -(y + dp / 2) * U, (z + h / 2) * U) + depthBias;
+  const C = cameraTransform(cam);
+  const th = (cam.thetaDeg * Math.PI) / 180;
+  const ph = (cam.phiDeg * Math.PI) / 180;
+  const ex = (x + w / 2) * U;
+  const ey = -(y + dp / 2) * U;
+  const ez = (z + h / 2) * U;
+  const dep =
+    Math.sin(th) * Math.sin(ph) * ex +
+    Math.sin(th) * Math.cos(ph) * ey +
+    Math.cos(th) * ez +
+    depthBias;
   const base: CSSProperties = {
     position: "absolute",
     left: 0,
@@ -205,7 +257,7 @@ export function buildWorld(): Face[] {
     col: string,
     topImage?: string,
     depthBias?: number,
-  ) => box(faces, x, y, z, w, dp, h, col, topImage, depthBias);
+  ) => box(faces, SCENE_CAMERA, x, y, z, w, dp, h, col, topImage, depthBias);
 
   const roadTop = shade(ROAD, 1.14);
   // 0deg = 가로 줄무늬. 원본은 90deg(세로)였는데, 카메라를 90° 돌리면서 줄무늬가
@@ -297,7 +349,7 @@ export function buildWorld(): Face[] {
 export const DINO_BUILD_Y = 15.5;
 
 /** 플레이어 캐릭터(공룡). 몸 색만 파라미터로 받는다. */
-export function buildDino(bodyColor: string): Face[] {
+export function buildDino(bodyColor: string, cam: CameraConfig = SCENE_CAMERA): Face[] {
   const faces: Face[] = [];
 
   // 원본 모델은 -y 를 향한다. 진행 방향을 왼쪽→오른쪽으로 뒤집었으므로 캐릭터도
@@ -363,7 +415,7 @@ export function buildDino(bodyColor: string): Face[] {
   const spanY = minY + maxY;
 
   for (const [x, y, z, w, d, h, c] of specs) {
-    box(faces, spanX - x - w + 3.6, spanY - y - d + DINO_BUILD_Y, z + 1.2, w, d, h, c);
+    box(faces, cam, spanX - x - w + 3.6, spanY - y - d + DINO_BUILD_Y, z + 1.2, w, d, h, c);
   }
 
   faces.sort((a, b) => a.dep - b.dep);

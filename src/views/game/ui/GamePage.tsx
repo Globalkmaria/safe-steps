@@ -1,6 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { CrosswalkScene } from "@/views/game/ui/CrosswalkScene";
+import { ResultDialog } from "@/views/game/ui/ResultDialog";
+import { SignalQuiz } from "@/views/game/ui/SignalQuiz";
+import type { SignalChoice } from "@/views/game/ui/SignalQuiz";
 import { useCrosswalkGame } from "@/views/game/model/use-crosswalk-game";
 
 /** 캐릭터 몸 색. 선택 UI 가 사라져 지금은 고정값이다. */
@@ -12,6 +16,14 @@ const DINO_COLOR = "#62b73a";
  */
 const WAIT_SECONDS = 0.6;
 const CROSS_SECONDS = 3.4;
+
+/** 성공 연출(색종이·별)을 보고 난 뒤 다시하기 팝업이 뜨기까지 */
+const CELEBRATE_MS = 2200;
+/**
+ * 빨간불에 나서려다 멈추는 동작을 다 보여준 뒤 실패 팝업이 뜨기까지.
+ * 팝업이 곧바로 덮으면 "왜 위험한지"를 보여주는 장면이 통째로 가려진다.
+ */
+const ABORT_MS = 1400;
 
 const BUBBLE_TEXT = {
   idle: "Let's cross safely! Wait for the green light.",
@@ -28,7 +40,56 @@ export function GamePage() {
     crossSeconds: CROSS_SECONDS,
   });
 
-  const { phase, isGreen } = game;
+  const { phase, isGreen, pressButton, walk, tryAgain, reset } = game;
+
+  /**
+   * 팝업 레이어의 상태. 씬과 상태 기계는 665a9f4 그대로 두고, 그 위에서만 관리한다.
+   * null = 아직 안 골랐다(퀴즈 표시 중).
+   */
+  const [choice, setChoice] = useState<SignalChoice | null>(null);
+  const [showReplay, setShowReplay] = useState(false);
+  const [showRetry, setShowRetry] = useState(false);
+
+  // 초록을 골랐으면 불이 바뀌는 순간 자동으로 건넌다 — 아이가 같은 판단을 두 번
+  // 하게 만들지 않는다. 기계에 새 단계를 넣는 대신 기존 walk() 를 부른다.
+  useEffect(() => {
+    if (choice === "green" && phase === "green") walk();
+  }, [choice, phase, walk]);
+
+  // 멈칫하는 동작을 다 보여준 뒤 실패 팝업을 띄운다.
+  // oops 를 벗어나는 경로는 handleRetry 뿐이고 거기서 직접 닫으므로,
+  // 여기서는 예약만 한다(이펙트 본문의 동기 setState 는 연쇄 렌더를 부른다).
+  useEffect(() => {
+    if (phase !== "oops") return;
+    const t = setTimeout(() => setShowRetry(true), ABORT_MS);
+    return () => clearTimeout(t);
+  }, [phase]);
+
+  // 성공 연출을 충분히 보여준 뒤 다시하기 팝업을 띄운다.
+  useEffect(() => {
+    if (phase !== "success") return;
+    const t = setTimeout(() => setShowReplay(true), CELEBRATE_MS);
+    return () => clearTimeout(t);
+  }, [phase]);
+
+  const handleChoice = (picked: SignalChoice) => {
+    setChoice(picked);
+    // 초록 → 신호를 바꾼다. 빨강 → 빨간불에 건너려다 멈추는 기존 실패 경로를 탄다.
+    if (picked === "green") pressButton();
+    else walk();
+  };
+
+  const handleRetry = () => {
+    setShowRetry(false);
+    setChoice(null);
+    tryAgain();
+  };
+
+  const handleReplay = () => {
+    setChoice(null);
+    setShowReplay(false);
+    reset();
+  };
 
   return (
     <div
@@ -44,7 +105,7 @@ export function GamePage() {
             instant={game.instant}
             dinoColor={DINO_COLOR}
             crossSeconds={CROSS_SECONDS}
-            onWalk={game.walk}
+            onWalk={walk}
           />
         </div>
 
@@ -55,6 +116,28 @@ export function GamePage() {
           {BUBBLE_TEXT[phase]}
         </p>
       </main>
+
+      {choice === null && phase === "idle" && <SignalQuiz onSelect={handleChoice} />}
+
+      {showRetry && (
+        <ResultDialog
+          tone="retry"
+          title="That was the red light!"
+          message="Red means stop. Cars are still going, so we wait on the pavement."
+          actionLabel="Try again"
+          onAction={handleRetry}
+        />
+      )}
+
+      {showReplay && (
+        <ResultDialog
+          tone="success"
+          title="You crossed safely!"
+          message="Green means the cars have stopped. That is when it is safe to walk."
+          actionLabel="Play again"
+          onAction={handleReplay}
+        />
+      )}
     </div>
   );
 }
