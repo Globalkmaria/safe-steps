@@ -79,7 +79,7 @@ export const SCENE_CAMERA: CameraConfig = {
 export const PORTRAIT_CAMERA: CameraConfig = {
   thetaDeg: 78,
   phiDeg: 180,
-  scale: 0.64,
+  scale: 1.35,
   offsetX: 0,
   offsetY: 0,
 };

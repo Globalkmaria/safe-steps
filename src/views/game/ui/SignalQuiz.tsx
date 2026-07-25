@@ -84,7 +84,7 @@ export function SignalQuiz({ onSelect }: { onSelect: (choice: SignalChoice) => v
 
       <div className="mt-6 flex items-center justify-center gap-5">
         <ChoiceButton kind="green" label="Green" onSelect={onSelect} />
-        <DinoFace size={132} />
+        <DinoFace size={150} />
         <ChoiceButton kind="red" label="Red" onSelect={onSelect} />
       </div>
     </Modal>

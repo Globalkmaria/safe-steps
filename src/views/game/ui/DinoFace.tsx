@@ -12,7 +12,7 @@ import { buildDino, PORTRAIT_CAMERA } from "@/views/game/model/scene";
  * 씬 카메라는 뒷모습을 보므로, 초상은 180° 돌리고 기울기를 낮춘 PORTRAIT_CAMERA 를 쓴다.
  */
 export function DinoFace({
-  size = 132,
+  size = 150,
   bodyColor = "#62b73a",
 }: {
   size?: number;
@@ -21,10 +21,12 @@ export function DinoFace({
   const faces = useMemo(() => buildDino(bodyColor, PORTRAIT_CAMERA), [bodyColor]);
 
   return (
+    // 원형으로 잘라 아바타처럼 보이게 한다 — 사각으로 자르면 얼굴이 잘린 게 아니라
+    // 렌더가 깨진 것처럼 읽힌다.
     <div
       aria-hidden
-      className="relative flex-none overflow-hidden"
-      style={{ width: size, height: size }}
+      className="relative flex-none overflow-hidden rounded-full border-[6px] border-white bg-[#eaf6df]"
+      style={{ width: size, height: size, boxShadow: "0 10px 0 rgba(30,60,80,.14)" }}
     >
       {/* 모델은 월드 좌표에 세워져 있으므로, 상자 중앙으로 끌어와야 화면에 들어온다. */}
       <div className="absolute left-1/2 top-1/2 h-0 w-0" style={{ transform: PORTRAIT_NUDGE }}>
@@ -37,8 +39,11 @@ export function DinoFace({
 }
 
 /**
- * 초상 카메라에서 모델이 초상 상자 가운데 오도록 하는 보정.
- * 브라우저에서 면들의 bounding box 중심을 재서 잡은 값이다 —
+ * 얼굴이 초상 상자 가운데 오도록 하는 보정.
+ *
+ * 모델 전체가 아니라 **눈 위치**를 기준으로 잡았다. 전체 bounding box 로 맞추면
+ * 몸통까지 들어와 얼굴이 작아진다. 배율을 키우고 눈을 중앙에 두면 상자가 나머지를
+ * 잘라내어 얼굴만 크게 남는다.
  * PORTRAIT_CAMERA 의 각도나 배율을 바꾸면 다시 재야 한다.
  */
-const PORTRAIT_NUDGE = "translate(78px,25px)";
+const PORTRAIT_NUDGE = "translate(165px,128px)";

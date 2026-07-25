@@ -216,20 +216,6 @@ export function CrosswalkScene({
             </div>
           )}
 
-          {phase === "success" && (
-            <div
-              aria-hidden
-              className="absolute right-[96px] top-[250px] grid h-[120px] w-[120px] place-items-center rounded-full border-[6px] border-white"
-              style={{
-                background:
-                  "radial-gradient(circle at 34% 30%, #ffe17a, #f2ad1c 70%, #d9900c)",
-                boxShadow: "0 12px 0 rgba(150,90,0,.28), 0 0 44px rgba(255,205,80,.75)",
-                animation: "ss-pop .5s cubic-bezier(.2,1.4,.5,1) both",
-              }}
-            >
-              <div className="text-[62px] leading-none text-white">★</div>
-            </div>
-          )}
         </div>
       </div>
     </div>
