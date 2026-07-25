@@ -16,10 +16,13 @@ import { haptic } from "@/shared/lib/haptics";
 
 export type GamePhase = "idle" | "waiting" | "green" | "crossing" | "success" | "oops";
 
-/** 인도에서 대기 중인 캐릭터의 세로 위치 */
-const DINO_START_Y = 15.5;
-/** 길을 다 건넜을 때의 세로 위치 */
-const DINO_END_Y = -5.5;
+/**
+ * 캐릭터는 신호등 **건너편** 인도(화면 왼쪽)에서 출발해 신호등이 있는 쪽(오른쪽)으로
+ * 건넌다. 화면상 왼쪽→오른쪽 이동이다.
+ */
+const DINO_START_Y = -5.5;
+/** 길을 다 건너 신호등 쪽 인도에 도착한 위치 */
+const DINO_END_Y = 15.5;
 
 export interface CrosswalkGameOptions {
   /** 버튼을 누른 뒤 초록불까지 걸리는 시간(초) */

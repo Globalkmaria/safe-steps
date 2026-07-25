@@ -101,7 +101,6 @@ export function GamePage() {
               phase={phase}
               isGreen={isGreen}
               dinoY={game.dinoY}
-              dinoStartY={game.dinoStartY}
               instant={game.instant}
               dinoColor={dinoColor}
               crossSeconds={CROSS_SECONDS}

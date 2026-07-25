@@ -82,19 +82,27 @@ export function depth(ex: number, ey: number, ez: number): number {
   );
 }
 
-/** 월드 좌표 이동량을 화면 픽셀 이동량으로 */
+/**
+ * 월드 좌표 이동량을 화면 픽셀 이동량으로.
+ *
+ * 소수 3자리로 끊는다 — 이 값이 인라인 style 의 transform 문자열이 되는데,
+ * 서버가 찍은 `-268.5823645469246px` 를 브라우저는 `-268.582px` 로 정규화해서
+ * hydration mismatch 경고가 난다. 렌더 결과에는 차이가 없는 자릿수다.
+ */
 export function screenDelta(
   ex: number,
   ey: number,
   ez: number,
 ): { dx: number; dy: number } {
+  const round = (v: number) => Math.round(v * 1000) / 1000;
   return {
-    dx: CAMERA_SCALE * (Math.cos(CAMERA_PHI) * ex - Math.sin(CAMERA_PHI) * ey),
-    dy:
+    dx: round(CAMERA_SCALE * (Math.cos(CAMERA_PHI) * ex - Math.sin(CAMERA_PHI) * ey)),
+    dy: round(
       CAMERA_SCALE *
-      (Math.cos(CAMERA_THETA) * Math.sin(CAMERA_PHI) * ex +
-        Math.cos(CAMERA_THETA) * Math.cos(CAMERA_PHI) * ey -
-        Math.sin(CAMERA_THETA) * ez),
+        (Math.cos(CAMERA_THETA) * Math.sin(CAMERA_PHI) * ex +
+          Math.cos(CAMERA_THETA) * Math.cos(CAMERA_PHI) * ey -
+          Math.sin(CAMERA_THETA) * ez),
+    ),
   };
 }
 
@@ -258,9 +266,20 @@ export function buildWorld(): Face[] {
   return faces;
 }
 
+/**
+ * 캐릭터가 서 있는 기준 월드 y. buildDino 가 이 자리에 모델을 세우고,
+ * 화면상 이동은 이 값과 현재 y 의 차이로 계산한다.
+ */
+export const DINO_BUILD_Y = 15.5;
+
 /** 플레이어 캐릭터(공룡). 몸 색만 파라미터로 받는다. */
 export function buildDino(bodyColor: string): Face[] {
   const faces: Face[] = [];
+
+  // 원본 모델은 -y 를 향한다. 진행 방향을 왼쪽→오른쪽으로 뒤집었으므로 캐릭터도
+  // 180° 돌려 세워야 뒤로 걷는 것처럼 보이지 않는다. 좌표를 26개 손으로 고치는 대신
+  // 상자 목록을 먼저 모아 경계를 재고, 그 중심을 축으로 뒤집는다 — 제자리는 유지된다.
+  const specs: Array<[number, number, number, number, number, number, string]> = [];
   const B = (
     x: number,
     y: number,
@@ -269,7 +288,9 @@ export function buildDino(bodyColor: string): Face[] {
     d: number,
     h: number,
     c: string,
-  ) => box(faces, x + 3.6, y + 15.5, z + 1.2, w, d, h, c);
+  ) => {
+    specs.push([x, y, z, w, d, h, c]);
+  };
 
   const g = bodyColor;
   const ORANGE = "#f0871f";
@@ -301,6 +322,25 @@ export function buildDino(bodyColor: string): Face[] {
   B(0.9, 3.85, 2.6, 3.2, 1, 3, ORANGE);
   B(1.6, 3.6, 5.6, 1.8, 0.4, 0.5, shade(ORANGE, 0.85));
   B(1.5, 3.75, 3.6, 2, 0.35, 0.6, "#c96a11");
+
+  // 수직축 180° 회전 = x·y 를 각 축의 경계 중심으로 반사. AABB 이므로
+  // 시작 좌표는 (2*중심 − 시작 − 길이) 가 되고 크기는 그대로다.
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const [x, y, , w, d] of specs) {
+    minX = Math.min(minX, x);
+    maxX = Math.max(maxX, x + w);
+    minY = Math.min(minY, y);
+    maxY = Math.max(maxY, y + d);
+  }
+  const spanX = minX + maxX;
+  const spanY = minY + maxY;
+
+  for (const [x, y, z, w, d, h, c] of specs) {
+    box(faces, spanX - x - w + 3.6, spanY - y - d + DINO_BUILD_Y, z + 1.2, w, d, h, c);
+  }
 
   faces.sort((a, b) => a.dep - b.dep);
   return faces;

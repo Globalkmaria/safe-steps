@@ -6,6 +6,7 @@ import {
   buildDino,
   buildWorld,
   CAMERA_TRANSFORM,
+  DINO_BUILD_Y,
   screenDelta,
   signalPixels,
   SIGNAL_FACE_X,
@@ -20,7 +21,6 @@ interface CrosswalkSceneProps {
   phase: GamePhase;
   isGreen: boolean;
   dinoY: number;
-  dinoStartY: number;
   instant: boolean;
   dinoColor: string;
   crossSeconds: number;
@@ -37,7 +37,6 @@ export function CrosswalkScene({
   phase,
   isGreen,
   dinoY,
-  dinoStartY,
   instant,
   dinoColor,
   crossSeconds,
@@ -116,7 +115,7 @@ export function CrosswalkScene({
     placeItems: "center",
   };
 
-  const delta = screenDelta(0, (dinoStartY - dinoY) * UNIT, 0);
+  const delta = screenDelta(0, (DINO_BUILD_Y - dinoY) * UNIT, 0);
 
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden">
