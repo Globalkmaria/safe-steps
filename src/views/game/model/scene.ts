@@ -97,6 +97,20 @@ export const THUMB_CAMERA: CameraConfig = {
 };
 
 /**
+ * 헬멧 썸네일용 카메라.
+ *
+ * 헬멧의 얼굴 구멍은 앞(-y)을 향한다. 그 구멍이 보이려면 카메라가 앞쪽에 있어야 하므로
+ * phi 를 0 근처로 두되, 정면 정통은 밋밋하니 살짝 틀어 3/4 로 본다.
+ */
+export const HELMET_CAMERA: CameraConfig = {
+  thetaDeg: 62,
+  phiDeg: 26,
+  scale: 0.6,
+  offsetX: 0,
+  offsetY: 0,
+};
+
+/**
  * 자전거를 탄 옆모습용 카메라. 초상과 같은 눈높이지만 90° 돌려 측면을 본다 —
  * 자전거를 타고 지나가는 것은 옆에서 봐야 읽힌다.
  */
@@ -593,12 +607,16 @@ function disc(
 }
 
 /**
- * 자전거 헬멧 — 빨간 돔 + 회색 챙 + 턱끈.
+ * 자전거 헬멧.
  *
- * 칸을 굵게(1.6) 잡는다. 1칸짜리로 쌓으면 계단이 잘게 갈라져 형태가 뭉개진다 —
- * 복셀은 덩어리가 커야 실루엣이 읽힌다.
+ * 핵심은 **속이 비어 있고 앞이 열려 있다**는 것이다. 통짜 돔으로 만들면 머리가 들어갈
+ * 구멍이 없어 헬멧으로 안 읽힌다. 그래서:
+ *  - 돔은 두께 2칸짜리 껍데기로만 쌓고(속은 비운다),
+ *  - 앞쪽 아래를 도려내 얼굴 구멍을 만든다.
+ * 뚫린 속은 box() 가 뒷면·밑면을 안 그리므로 그대로 배경이 비쳐 보인다 — 레퍼런스의
+ * 투명한 구멍과 같은 결과다.
  */
-export function buildHelmet(cam: CameraConfig = THUMB_CAMERA): Face[] {
+export function buildHelmet(cam: CameraConfig = HELMET_CAMERA): Face[] {
   const faces: Face[] = [];
   const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
     box(faces, cam, x, y, z, w, d, h, c);
@@ -606,27 +624,52 @@ export function buildHelmet(cam: CameraConfig = THUMB_CAMERA): Face[] {
   const SHELL = "#c8302c";
   const SHELL_TOP = "#dc4038";
   const VISOR = "#c3c9ce";
-  const STRAP = "#a02622";
-  const CELL = 0.85;
+  const STRAP = "#a6231f";
 
-  // 구를 층으로 근사한다 — 반지름을 코사인으로 줄여야 돔이 되고, 선형이면 원뿔이 된다.
-  // 속은 채운다 — 껍데기만 두면 앞쪽 테두리 너머로 빈 속이 뚫려 보인다.
-  const LAYERS = 7;
-  const MAX_R = 4.6;
+  const CELL = 0.8;
+  const LAYERS = 8;
+  const MAX_R = 4.8;
+  /** 껍데기 두께 */
+  const THICK = 1.7;
+  /** 얼굴 구멍 — 앞쪽(-y) 이 높이 이 아래로 뚫린다 */
+  const MOUTH_Z = 2.6;
+  const MOUTH_Y = -0.6;
+
   for (let i = 0; i < LAYERS; i++) {
-    const t = i / LAYERS;
-    const r = MAX_R * Math.cos((t * Math.PI) / 2.35);
+    // 반지름을 코사인으로 줄여야 돔이 된다(선형이면 원뿔).
+    const r = MAX_R * Math.cos(((i / LAYERS) * Math.PI) / 2.4);
     const z = i * CELL;
-    disc(B, r, z, CELL + 0.05, i > 3 ? SHELL_TOP : SHELL, CELL);
+    const steps = Math.ceil(r / CELL) + 1;
+
+    for (let ix = -steps; ix <= steps; ix++) {
+      for (let iy = -steps; iy <= steps; iy++) {
+        const x = ix * CELL;
+        const y = iy * CELL;
+        const d = Math.hypot(x + CELL / 2, y + CELL / 2);
+        if (d > r) continue;
+        // 위 두 층은 뚜껑이라 속을 채우고, 아래는 껍데기만 남긴다
+        const isCap = i >= LAYERS - 2;
+        if (!isCap && d < r - THICK) continue;
+        // 앞쪽 아래를 도려내 얼굴 구멍을 만든다
+        if (z < MOUTH_Z && y + CELL / 2 < MOUTH_Y) continue;
+        B(x, y, z, CELL, CELL, CELL + 0.04, i > 4 ? SHELL_TOP : SHELL);
+      }
+    }
   }
 
-  // 챙 — 얼굴 쪽으로 튀어나온 회색 테
-  B(-4.0, -5.6, 0.2, 8.0, 1.4, 0.6, VISOR);
+  // 챙 — 구멍 위를 덮는 회색 테
+  B(-3.2, -4.9, MOUTH_Z, 6.4, 1.5, 0.55, VISOR);
 
-  // 턱끈
-  B(-3.9, -3.4, -3.2, 0.7, 0.7, 3.2, STRAP);
-  B(3.2, -3.4, -3.2, 0.7, 0.7, 3.2, STRAP);
-  B(-3.9, -3.4, -3.4, 7.8, 0.7, 0.7, STRAP);
+  // 턱끈 — 구멍 양옆에서 내려오며 안쪽으로 모여 버클에서 만난다.
+  // 복셀이라 사선은 계단으로 만든다.
+  for (let i = 0; i < 3; i++) {
+    const z = -1.3 - i * 1.15;
+    const inset = i * 0.55;
+    B(-3.9 + inset, -1.4, z, 0.7, 0.7, 1.2, STRAP);
+    B(3.2 - inset, -1.4, z, 0.7, 0.7, 1.2, STRAP);
+  }
+  B(-2.8, -1.4, -4.9, 5.6, 0.7, 0.7, STRAP); // 턱 아래를 지나는 끈
+  B(-0.8, -1.6, -5.5, 1.6, 1.1, 0.8, "#8f1c19"); // 버클
 
   faces.sort((a, b) => a.dep - b.dep);
   return faces;

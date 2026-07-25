@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Modal } from "@/shared/ui/modal";
 import { DinoOnBike } from "@/views/game/ui/DinoOnBike";
 import { VoxelFigure } from "@/views/game/ui/VoxelFigure";
-import { buildHelmet, buildPizza, THUMB_CAMERA } from "@/views/game/model/scene";
+import { buildHelmet, buildPizza, HELMET_CAMERA, THUMB_CAMERA } from "@/views/game/model/scene";
 
 /** 두 번째 스텝의 선택지. helmet 이 정답이다. */
 export type BikeChoice = "helmet" | "pizza";
@@ -48,7 +48,7 @@ function ChoiceButton({
  */
 export function BikeQuiz({ onSelect }: { onSelect: (choice: BikeChoice) => void }) {
   const pizza = useMemo(() => buildPizza(THUMB_CAMERA), []);
-  const helmet = useMemo(() => buildHelmet(THUMB_CAMERA), []);
+  const helmet = useMemo(() => buildHelmet(HELMET_CAMERA), []);
 
   return (
     <Modal labelledBy="bike-quiz-title">
@@ -85,4 +85,4 @@ export function BikeQuiz({ onSelect }: { onSelect: (choice: BikeChoice) => void 
 
 /** 브라우저에서 실측한 중앙 보정 — PORTRAIT_CAMERA 를 바꾸면 다시 재야 한다 */
 const PIZZA_NUDGE = "translate(0px,5px)";
-const HELMET_NUDGE = "translate(-7px,24px)";
+const HELMET_NUDGE = "translate(0px,13px)";
