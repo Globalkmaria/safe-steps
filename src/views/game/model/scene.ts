@@ -22,18 +22,18 @@ const CAMERA_THETA_DEG = 52;
 /**
  * 카메라 회전(수평으로 도는 각).
  *
- * 원본 프로토타입은 -24° 였다. 목표는 셋이다 —
- * (1) 캐릭터가 뒷모습을 보이며 걸어갈 것, (2) 신호등이 화면 오른쪽에 설 것,
- * (3) 신호등 패널이 카메라를 향해 빨강/초록이 보일 것.
+ * 원본 프로토타입은 -24° 였다. 회전 이력: -24 → 66 → 156 → 66.
  *
- * 180° 회전은 (1)을 만족할 수 없다 — 뒷모습의 정반대는 앞모습이다.
- * 실측으로 156° 에서 셋이 동시에 성립했다.
+ * 참고 — 180° 회전은 "뒷모습" 요구를 만족할 수 없다(뒷모습의 정반대는 앞모습).
+ * 그리고 156° 에서만 신호등 패널이 카메라를 향해 빨강/초록이 보인다. 현재 66° 에서는
+ * 패널이 반대편을 보므로 불빛이 화면에 안 나온다 — 신호 판단을 화면 밖 단서(말풍선·
+ * 미션 체크)에 의존하게 되므로, 게임 기획 단계에서 다시 볼 것.
  *
  * ⚠️ 이 값 하나가 세 곳을 동시에 지배한다: CSS 카메라 transform, 면 깊이 정렬(depth),
  * 캐릭터 이동의 화면 방향(screenDelta). 셋이 어긋나면 겹침 순서가 뒤집히거나
  * 캐릭터가 엉뚱한 방향으로 걷는다. 그래서 상수 하나에서 전부 파생시킨다.
  */
-const CAMERA_PHI_DEG = 156;
+const CAMERA_PHI_DEG = 66;
 
 const CAMERA_THETA = (CAMERA_THETA_DEG * Math.PI) / 180;
 const CAMERA_PHI = (CAMERA_PHI_DEG * Math.PI) / 180;
@@ -45,8 +45,8 @@ const CAMERA_SCALE = 0.7;
  * CAMERA_PHI_DEG 를 바꾸면 이 값도 다시 재야 한다(브라우저에서 면들의 bounding box
  * 중심을 재서 스테이지 중심 520,360 과의 차이를 넣는다).
  */
-const CAMERA_OFFSET_X = 1;
-const CAMERA_OFFSET_Y = -80;
+const CAMERA_OFFSET_X = -135;
+const CAMERA_OFFSET_Y = 23;
 
 /** 모든 면에 공통으로 적용되는 카메라 transform */
 export const CAMERA_TRANSFORM =
