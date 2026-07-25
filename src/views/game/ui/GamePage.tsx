@@ -13,11 +13,15 @@ const DINO_COLORS = [
   { value: "#e2913a", label: "Orange" },
 ] as const;
 
-const WAIT_SECONDS = 1.8;
+/**
+ * 버튼을 누르고 초록불까지의 시간. 신호 전환이 "바로" 느껴지도록 짧게 잡되 0 은 아니다 —
+ * 색이 즉시 튀면 고장처럼 보이고, 이 구간의 깜빡임이 곧 "기다리는 중" 이라는 신호다.
+ */
+const WAIT_SECONDS = 0.6;
 const CROSS_SECONDS = 3.4;
 
 const BUBBLE_TEXT = {
-  idle: "Let's cross safely! First, find the button.",
+  idle: "Let's cross safely! Press the traffic light button.",
   waiting: "Nice press! Now wait for the green light…",
   green: "Green light! It's safe now — tap Walk to cross.",
   crossing: "Here we go — walking safely!",
@@ -104,7 +108,6 @@ export function GamePage() {
               instant={game.instant}
               dinoColor={dinoColor}
               crossSeconds={CROSS_SECONDS}
-              onPressButton={game.pressButton}
               onWalk={game.walk}
             />
           </div>
@@ -119,6 +122,39 @@ export function GamePage() {
 
         {/* 우: 선택 사항 */}
         <aside className="flex w-1/4 max-w-[300px] shrink-0 flex-col justify-center gap-5 p-3">
+          <section>
+            <h2 className="px-1 text-sm font-extrabold uppercase tracking-wide text-slate-500">
+              Traffic light
+            </h2>
+            <button
+              type="button"
+              onClick={game.pressButton}
+              disabled={phase !== "idle"}
+              className="mt-2 flex min-h-14 w-full items-center justify-center gap-2 rounded-3xl border-4 border-white px-3 py-3 text-lg font-extrabold text-white transition active:translate-y-1 disabled:active:translate-y-0"
+              style={{
+                background: isGreen
+                  ? "linear-gradient(#6fca4a,#4da12c)"
+                  : phase === "waiting"
+                    ? "linear-gradient(#f5c542,#d99f14)"
+                    : "linear-gradient(#f0705e,#d1483a)",
+                boxShadow: isGreen
+                  ? "0 6px 0 #3b7d21"
+                  : phase === "waiting"
+                    ? "0 6px 0 #a97a0c"
+                    : "0 6px 0 #9c3529",
+              }}
+            >
+              <span
+                aria-hidden
+                className="h-4 w-4 rounded-full bg-white/95"
+                style={{
+                  animation: phase === "waiting" ? "ss-flash .35s ease-in-out infinite" : "none",
+                }}
+              />
+              {isGreen ? "Green — go!" : phase === "waiting" ? "Changing…" : "Press the button"}
+            </button>
+          </section>
+
           <section>
             <h2 className="px-1 text-sm font-extrabold uppercase tracking-wide text-slate-500">
               Mission

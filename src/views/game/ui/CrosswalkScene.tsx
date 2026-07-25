@@ -24,7 +24,6 @@ interface CrosswalkSceneProps {
   instant: boolean;
   dinoColor: string;
   crossSeconds: number;
-  onPressButton: () => void;
   onWalk: () => void;
 }
 
@@ -40,7 +39,6 @@ export function CrosswalkScene({
   instant,
   dinoColor,
   crossSeconds,
-  onPressButton,
   onWalk,
 }: CrosswalkSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -63,7 +61,6 @@ export function CrosswalkScene({
   const { rows, columns } = useMemo(() => signalPixels(isGreen), [isGreen]);
 
   const litColor = isGreen ? "#5cf06a" : "#ff5347";
-  const pressed = phase !== "idle";
 
   const panelStyle: CSSProperties = {
     position: "absolute",
@@ -89,30 +86,6 @@ export function CrosswalkScene({
         : phase === "waiting"
           ? "ss-flash 1s ease-in-out infinite"
           : "none",
-  };
-
-  const buttonStyle: CSSProperties = {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    transformOrigin: "0 0",
-    width: 2.3 * UNIT,
-    height: 2.3 * UNIT,
-    padding: 0,
-    borderRadius: "50%",
-    cursor: phase === "idle" ? "pointer" : "default",
-    boxSizing: "border-box",
-    border: "4px solid #f7f4ea",
-    background: pressed
-      ? "radial-gradient(circle at 38% 32%, #ffe9a8, #f2b21c 65%, #cf8d0c)"
-      : "radial-gradient(circle at 38% 32%, #ffd86b, #ef8b1c 62%, #c96a11)",
-    boxShadow: pressed
-      ? "0 0 22px rgba(255,214,90,.95), inset 0 0 10px rgba(255,255,255,.7)"
-      : "0 0 14px rgba(0,0,0,.25)",
-    // 버튼은 함체가 아니라 기둥의 버튼함(x −3.4..−3.0) 면에 붙는다.
-    transform: `${CAMERA_TRANSFORM} translate3d(${-3.45 * UNIT}px,${-14.9 * UNIT}px,${6 * UNIT}px) rotateZ(${SIGNAL_TURN_DEG}deg) rotateX(-90deg)`,
-    display: "grid",
-    placeItems: "center",
   };
 
   const delta = screenDelta(0, (DINO_BUILD_Y - dinoY) * UNIT, 0);
@@ -163,59 +136,6 @@ export function CrosswalkScene({
                   )),
                 )}
               </div>
-
-              {/* 기둥 전체를 큰 히트 영역으로 — 아이 손가락에 관대하게 */}
-              <button
-                type="button"
-                onClick={onPressButton}
-                disabled={phase !== "idle"}
-                aria-label="Press the crosswalk button"
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  transformOrigin: "0 0",
-                  width: 4.4 * UNIT,
-                  height: 12 * UNIT,
-                  transform: `${CAMERA_TRANSFORM} translate3d(${-3.9 * UNIT}px,${-14.4 * UNIT}px,${13 * UNIT}px) rotateZ(${SIGNAL_TURN_DEG}deg) rotateX(-90deg)`,
-                  background: "transparent",
-                  border: "none",
-                  cursor: phase === "idle" ? "pointer" : "default",
-                }}
-              />
-              <button
-                type="button"
-                onClick={onPressButton}
-                disabled={phase !== "idle"}
-                aria-label="Press the crosswalk button"
-                style={buttonStyle}
-              >
-                <span
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    inset: -6,
-                    borderRadius: "50%",
-                    border: "5px solid rgba(255,255,255,.9)",
-                    pointerEvents: "none",
-                    animation: phase === "idle" ? "ss-ring 1.5s ease-out infinite" : "none",
-                    opacity: phase === "idle" ? 1 : 0,
-                  }}
-                />
-                <span
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    inset: 2,
-                    borderRadius: "50%",
-                    border: "5px solid rgba(255,255,255,.28)",
-                    borderTopColor: "#fff",
-                    pointerEvents: "none",
-                    animation: "ss-spin .9s linear infinite",
-                    opacity: phase === "waiting" ? 1 : 0,
-                  }}
-                />
-              </button>
 
               <button
                 type="button"
