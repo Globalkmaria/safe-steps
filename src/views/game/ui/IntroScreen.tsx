@@ -82,10 +82,8 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
 
   return (
     <div
-      className="intro-frame fixed z-50 flex flex-col items-center justify-center gap-4 p-4"
-      // fixed 는 body 여백을 무시하므로 직접 같은 만큼 안쪽에 붙인다
+      className="intro-frame fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-4"
       style={{
-        inset: "var(--app-inset)",
         background: "linear-gradient(#ffe9c2 0%, #ffd7d2 55%, #ffeede 100%)",
       }}
     >

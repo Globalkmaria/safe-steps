@@ -48,11 +48,7 @@ export function Modal({
   const scale = size.frame && size.card ? Math.min(1, size.frame / size.card) : 1;
 
   return (
-    // fixed 는 body 여백을 무시하므로 직접 같은 만큼 안쪽에 붙인다
-    <div
-      className="fixed z-50 bg-slate-900/45 p-2 backdrop-blur-sm sm:p-4"
-      style={{ inset: "var(--app-inset)" }}
-    >
+    <div className="fixed inset-0 z-50 bg-slate-900/45 p-2 backdrop-blur-sm sm:p-4">
       <div ref={frameRef} className="flex h-full w-full items-center justify-center">
         {/*
           축소한 뒤의 높이를 자리로 잡아준다. 이게 없으면 원래 높이를 기준으로 가운데

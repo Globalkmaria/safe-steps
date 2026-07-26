@@ -10,15 +10,6 @@
 :root {
   --background: #e9f3fb;
   --foreground: #33434f;
-  /**
-   * 화면 가장자리에서 띄우는 여백. 게임 화면·인트로·팝업이 모두 이 값을 쓴다.
-   * 높이 계산(100dvh - 2 * 이 값)에도 들어가므로 한 곳에서만 바꾼다.
-   */
-  --app-inset: 10px;
-}
-
-body {
-  padding: var(--app-inset);
 }
 
 body {

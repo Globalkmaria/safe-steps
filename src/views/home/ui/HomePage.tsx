@@ -7,8 +7,7 @@ import { ROUTES, SITE_NAME, SITE_TAGLINE } from "@/shared/config/site";
 export function HomePage() {
   return (
     <main
-      className="flex flex-col items-center justify-center gap-6 bg-gradient-to-b from-sky-200 to-emerald-100 p-6 pb-safe text-center"
-      style={{ minHeight: "calc(100dvh - 2 * var(--app-inset))" }}
+      className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-gradient-to-b from-sky-200 to-emerald-100 p-6 pb-safe text-center"
     >
       <span className="text-7xl" aria-hidden>
         🚸

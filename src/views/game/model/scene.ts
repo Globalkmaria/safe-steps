@@ -408,10 +408,35 @@ export function buildWorld(): Face[] {
  */
 export const DINO_BUILD_Y = 15.5;
 
+/**
+ * 머리 위(쓴 자리)에서 손(든 자리)까지의 월드 오프셋.
+ *
+ * 헬멧을 손에 들었다가 쓰는 장면에 쓴다. 헬멧은 늘 머리 기준으로 만들어지므로,
+ * 손에 든 상태는 "머리에서 이만큼 옮긴 것"으로 표현하는 게 가장 단순하다.
+ *
+ * 값은 팔의 실제 좌표(x 3.0~3.8, z 4.6~6.2)가 아니라 화면상 이동량을 보고 정했다.
+ * 이 투영에서는 -x 가 화면 위로 올라가서, 팔 쪽으로 빼내는 만큼 내려가는 양이
+ * 상쇄된다. 실제 팔 좌표를 그대로 쓰면 헬멧이 20px 남짓 꿈틀하고 말아서
+ * 손에 들었다는 게 안 읽힌다. 그래서 옆으로 벌리는 몫은 -x 대신 +y(카메라 쪽,
+ * 즉 몸 앞으로 내미는 방향)가 맡는다 — 화면에서 왼쪽 아래로 간다.
+ *
+ * 지금 값의 화면상 결과는 약 (-39px, +52px) — 머리에서 팔·허리 높이까지다.
+ * 바꿀 때는 screenDelta 를 통과시킨 값을 보고 정할 것.
+ */
+export const HELMET_HAND_OFFSET = { x: 0.5, y: 1.2, z: -8.0 };
+
 /** 플레이어 캐릭터(공룡). 몸 색만 파라미터로 받는다. */
 export interface DinoOptions {
   /** 머리에 헬멧을 씌운다 — 자전거 스텝을 통과한 뒤의 모습 */
   withHelmet?: boolean;
+  /**
+   * 헬멧 면들을 몸 면들과 섞지 않고 여기에 따로 담는다.
+   *
+   * 헬멧을 손에 들었다가 머리에 쓰는 장면 때문에 필요하다. 한 배열로 받으면
+   * 헬멧만 움직일 수가 없다. 위치 계산은 그대로 머리 상자에서 파생되므로,
+   * 받은 쪽은 이 배열을 통째로 HELMET_HAND_OFFSET 만큼 옮겼다가 0 으로 되돌리면 된다.
+   */
+  helmetOut?: Face[];
   /** 안장에 앉도록 통째로 들어올린다(자전거를 탈 때) */
   lift?: number;
   /** 앞치마를 두르고, 인사하는 팔은 따로 그리도록 한쪽을 비운다(엄마 공룡) */
@@ -430,7 +455,7 @@ export function buildDino(
   cam: CameraConfig = SCENE_CAMERA,
   options: DinoOptions = {},
 ): Face[] {
-  const { withHelmet = false, lift = 0, apron, faceAway = false } = options;
+  const { withHelmet = false, lift = 0, apron, faceAway = false, helmetOut } = options;
   const faces: Face[] = [];
 
   // 원본 모델은 -y 를 향한다. 진행 방향을 왼쪽→오른쪽으로 뒤집었으므로 캐릭터도
@@ -526,8 +551,9 @@ export function buildDino(
       const cy = (faceAway ? hy : spanY - hy - hd) + DINO_BUILD_Y + hd / 2;
       const top = hz + 1.2 + lift + hh;
 
+      const shell = helmetOut ?? faces;
       const HB = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
-        box(faces, cam, x, y, z, w, d, h, c);
+        box(shell, cam, x, y, z, w, d, h, c);
       const CELL = 0.62;
       const SHELL = "#c8302c";
       const SHELL_TOP = "#dc4038";
@@ -548,6 +574,8 @@ export function buildDino(
       }
       // 챙 — 캐릭터가 +y 를 보므로 그쪽에 붙인다
       HB(cx - 1.7, cy + (faceAway ? -2.1 : 1.7), top - 0.45, 3.4, 0.8, 0.4, "#c3c9ce");
+      // 따로 담았으면 별도의 쌓임 맥락에 그려지므로 자기들끼리 다시 정렬해야 한다.
+      if (helmetOut) helmetOut.sort((a, b) => a.dep - b.dep);
     }
   }
 
@@ -989,10 +1017,9 @@ export function buildSchool(cam: CameraConfig = SCENE_CAMERA): Face[] {
   B(SIGN_X + 0.7, FACE - 1.15, SIGN_Z + 1.95, 3.4, 0.25, 0.45, SIGN_INK);
   B(SIGN_X + 0.7, FACE - 1.15, SIGN_Z + 1.1, 2.7, 0.25, 0.45, SIGN_INK);
 
-  // 성조기 — 미국 학교는 국기를 단다. 학교임을 알리는 또 하나의 신호다.
-  const FLAG_RED = "#b22234";
-  const FLAG_WHITE = "#f7f5f0";
-  const FLAG_NAVY = "#3c3b6e";
+  // 깃발 — 지붕 위 깃대에 하나. 학교임을 알리는 또 하나의 신호다.
+  const FLAG_YELLOW = "#f5c518";
+  const FLAG_SHADE = "#d9a209";
 
   const POLE_X = X0 + 11.4;
   const POLE_Y = FRONT + 2.4;
@@ -1001,46 +1028,24 @@ export function buildSchool(cam: CameraConfig = SCENE_CAMERA): Face[] {
   B(POLE_X, POLE_Y, POLE_Z, 0.3, 0.3, POLE_H, "#e8e4da");
   B(POLE_X - 0.15, POLE_Y - 0.15, POLE_Z + POLE_H, 0.6, 0.6, 0.35, "#d8ac3a"); // 깃봉
 
-  // 붉은 줄 넷과 흰 줄 셋 — 13줄은 이 크기에서 뭉개진다. 왼쪽 위에 파란 칸톤.
-  const STRIPE_H = 0.34;
+  // 펄럭이는 결은 폭을 정확히 나눠 갖는 세로 띠로 낸다. 좁은 조각을 깃발 앞에
+  // 덧대면 깊이 정렬에서 밀려 나와 별개의 판때기 세 장처럼 보인다 — 겹치지 않게
+  // 타일링하면 그 문제가 아예 생기지 않는다.
   const FLAG_W = 3.2;
-  const FLAG_Z = POLE_Z + POLE_H - STRIPE_H * 7 - 0.25;
-  for (let i = 0; i < 7; i++) {
+  const FLAG_H = 2.38;
+  const FLAG_BANDS = 4;
+  const BAND_W = FLAG_W / FLAG_BANDS;
+  const FLAG_Z = POLE_Z + POLE_H - FLAG_H - 0.25;
+  for (let i = 0; i < FLAG_BANDS; i++) {
     B(
-      POLE_X + 0.28,
+      POLE_X + 0.28 + i * BAND_W,
       POLE_Y + 0.03,
-      FLAG_Z + i * STRIPE_H,
-      FLAG_W,
+      FLAG_Z,
+      BAND_W,
       0.22,
-      STRIPE_H,
-      i % 2 === 0 ? FLAG_RED : FLAG_WHITE,
+      FLAG_H,
+      i % 2 === 0 ? FLAG_YELLOW : FLAG_SHADE,
     );
-  }
-  // 칸톤은 줄무늬보다 좁아서 중심점 기준 정렬로는 줄무늬 뒤로 밀린다.
-  // y 를 앞으로 빼는 것만으로는 안 되고, 깊이 바이어스로 앞에 고정해야 한다.
-  B(
-    POLE_X + 0.28,
-    POLE_Y - 0.04,
-    FLAG_Z + STRIPE_H * 4,
-    FLAG_W * 0.42,
-    0.24,
-    STRIPE_H * 3,
-    FLAG_NAVY,
-    60,
-  );
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 2; j++) {
-      B(
-        POLE_X + 0.45 + i * 0.34,
-        POLE_Y - 0.1,
-        FLAG_Z + STRIPE_H * 4.35 + j * 0.36,
-        0.18,
-        0.1,
-        0.18,
-        FLAG_WHITE,
-        90,
-      );
-    }
   }
 
   faces.sort((a, b) => a.dep - b.dep);

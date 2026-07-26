@@ -9,6 +9,7 @@ import {
   buildWorld,
   CAMERA_TRANSFORM,
   DINO_BUILD_Y,
+  HELMET_HAND_OFFSET,
   screenDelta,
   signalPixels,
   SIGNAL_FACE_X,
@@ -24,6 +25,7 @@ import {
   STAGE_WIDTH,
   UNIT,
 } from "@/views/game/model/scene";
+import type { Face } from "@/views/game/model/scene";
 import type { GamePhase } from "@/views/game/model/use-crosswalk-game";
 
 interface CrosswalkSceneProps {
@@ -34,6 +36,8 @@ interface CrosswalkSceneProps {
   dinoColor: string;
   /** 자전거 스텝을 통과하면 헬멧을 쓴다 */
   wearsHelmet?: boolean;
+  /** 아직 손에 들고 있다 — 여기서 false 로 바뀌면 머리로 올라간다 */
+  helmetInHand?: boolean;
   /** 자전거에서 내렸다 — 캐릭터만 안장 높이에서 땅으로 내려온다 */
   dismounted?: boolean;
   /** 길 건너 학교를 보여준다 — 마지막 스텝의 목적지 */
@@ -56,6 +60,7 @@ export function CrosswalkScene({
   instant,
   dinoColor,
   wearsHelmet = false,
+  helmetInHand = false,
   dismounted = false,
   showSchool = false,
   strayed = false,
@@ -80,13 +85,17 @@ export function CrosswalkScene({
   const worldFaces = useMemo(() => buildWorld(), []);
   // 헬멧을 썼다는 것은 자전거 스텝을 통과했다는 뜻이라, 자전거도 같이 탄다.
   const ridesBike = wearsHelmet;
-  const dinoFaces = useMemo(
-    () => buildDino(dinoColor, undefined, {
-        withHelmet: wearsHelmet,
-        lift: ridesBike ? SCENE_BIKE_LIFT : 0,
-      }),
-    [dinoColor, wearsHelmet, ridesBike],
-  );
+  // 헬멧은 손에서 머리로 올라가야 하므로 몸과 따로 받는다. 위치는 그대로
+  // 머리 기준으로 계산되고, 손에 든 상태만 화면 좌표로 옮겨서 표현한다.
+  const { dinoFaces, helmetFaces } = useMemo(() => {
+    const helmet: Face[] = [];
+    const body = buildDino(dinoColor, undefined, {
+      withHelmet: wearsHelmet,
+      lift: ridesBike ? SCENE_BIKE_LIFT : 0,
+      helmetOut: helmet,
+    });
+    return { dinoFaces: body, helmetFaces: helmet };
+  }, [dinoColor, wearsHelmet, ridesBike]);
   const bikeFaces = useMemo(
     () => (ridesBike ? buildBike(SCENE_CAMERA, SCENE_BIKE_ORIGIN) : []),
     [ridesBike],
@@ -136,6 +145,21 @@ export function CrosswalkScene({
     top: 0,
     transform: dismounted ? `translate(${dropped.dx}px,${dropped.dy}px)` : "none",
     transition: "transform 1s ease-in-out",
+  };
+
+  // 손에 든 자리 → 머리. 헬멧은 늘 머리에 맞춰 지어지므로, 든 상태 쪽을 오프셋으로 둔다.
+  const held = screenDelta(
+    HELMET_HAND_OFFSET.x * UNIT,
+    HELMET_HAND_OFFSET.y * UNIT,
+    HELMET_HAND_OFFSET.z * UNIT,
+  );
+  const helmetStyle: CSSProperties = {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    transform: helmetInHand ? `translate(${held.dx}px,${held.dy}px)` : "none",
+    // 들어올리는 동작이라 끝을 부드럽게 놓는다 — 머리에 얹히는 느낌.
+    transition: "transform .85s cubic-bezier(.36,.06,.28,1)",
   };
 
   // 무단횡단은 자전거를 끌고 함께 벗어나는 것이므로 둘 다 감싸서 옮긴다.
@@ -249,6 +273,11 @@ export function CrosswalkScene({
                     {dinoFaces.map((face, i) => (
                       <div key={`d${i}`} className={face.className} style={face.style} />
                     ))}
+                    <div style={helmetStyle}>
+                      {helmetFaces.map((face, i) => (
+                        <div key={`h${i}`} className={face.className} style={face.style} />
+                      ))}
+                    </div>
                   </div>
                 </div>
                 </div>

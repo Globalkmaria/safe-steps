@@ -31,8 +31,16 @@ const CELEBRATE_MS = 2200;
  * 팝업이 곧바로 덮으면 "왜 위험한지"를 보여주는 장면이 통째로 가려진다.
  */
 const ABORT_MS = 1400;
-/** 헬멧 쓰고 자전거에 오른 모습을 보여준 뒤 축하 팝업이 뜨기까지 */
-const HELMET_ON_MS = 1600;
+/**
+ * 헬멧을 손에 든 채로 잠깐 보여준 뒤 머리로 올리기까지.
+ * 곧바로 올리면 손에 들었다는 게 안 읽히고 그냥 처음부터 쓴 것처럼 보인다.
+ */
+const HELMET_LIFT_MS = 550;
+/**
+ * 헬멧 쓰고 자전거에 오른 모습을 보여준 뒤 축하 팝업이 뜨기까지.
+ * 드는 동작(HELMET_LIFT_MS + 올라가는 0.85s)이 끝나고도 쓴 모습이 한 박자 남도록 잡는다.
+ */
+const HELMET_ON_MS = 2600;
 /** 자전거에서 내리는 동작이 끝나고 다음 질문이 뜨기까지 */
 const DISMOUNT_MS = 1600;
 /** 횡단보도를 벗어나 도로에 들어섰다 되돌아오는 동작이 끝나기까지 */
@@ -74,6 +82,7 @@ export function GamePage() {
   const [gearResult, setGearResult] = useState<"retry" | "success" | null>(null);
   const [showGearSuccess, setShowGearSuccess] = useState(false);
   const [wearsHelmet, setWearsHelmet] = useState(false);
+  const [helmetInHand, setHelmetInHand] = useState(false);
 
   // 스텝 2 — 타고 갈까 끌고 갈까
   const [showModeQuiz, setShowModeQuiz] = useState(false);
@@ -97,11 +106,15 @@ export function GamePage() {
     if (autoCross && phase === "green") walk();
   }, [autoCross, phase, walk]);
 
-  // 스텝 1: 헬멧 쓰고 자전거에 오른 모습을 보여준 뒤 축하 팝업.
+  // 스텝 1: 손에 든 헬멧을 머리에 쓰는 동작을 보여준 뒤 축하 팝업.
   useEffect(() => {
     if (gearResult !== "success") return;
-    const t = setTimeout(() => setShowGearSuccess(true), HELMET_ON_MS);
-    return () => clearTimeout(t);
+    const lift = setTimeout(() => setHelmetInHand(false), HELMET_LIFT_MS);
+    const done = setTimeout(() => setShowGearSuccess(true), HELMET_ON_MS);
+    return () => {
+      clearTimeout(lift);
+      clearTimeout(done);
+    };
   }, [gearResult]);
 
   // 스텝 3: 내리는 동작이 끝나면 신호를 묻는다.
@@ -143,6 +156,8 @@ export function GamePage() {
       return;
     }
     setGearResult("success");
+    // 헬멧은 손에 든 채로 먼저 나타난다. 위 useEffect 가 곧 머리로 올린다.
+    setHelmetInHand(true);
     setWearsHelmet(true);
   };
 
@@ -193,6 +208,7 @@ export function GamePage() {
     setGearResult(null);
     setShowGearSuccess(false);
     setWearsHelmet(false);
+    setHelmetInHand(false);
     setShowModeQuiz(false);
     setModeRetry(false);
     setDismounted(false);
@@ -209,15 +225,13 @@ export function GamePage() {
   return (
     <div
       className="w-full"
-      // body 여백만큼 뺀 높이. 그대로 100dvh 를 쓰면 여백이 더해져 스크롤이 생긴다.
       style={{
-        minHeight: "calc(100dvh - 2 * var(--app-inset))",
+        minHeight: "100dvh",
         background: "linear-gradient(#8fd0f5 0%, #b9e4f7 52%, #d8f0e2 100%)",
       }}
     >
       <main
-        className="relative mx-auto flex w-full max-w-[1024px] flex-col"
-        style={{ height: "calc(100dvh - 2 * var(--app-inset))" }}
+        className="relative mx-auto flex h-dvh w-full max-w-[1024px] flex-col"
       >
         <div className="min-h-0 flex-1">
           <CrosswalkScene
@@ -227,6 +241,7 @@ export function GamePage() {
             instant={game.instant}
             dinoColor={DINO_COLOR}
             wearsHelmet={wearsHelmet}
+            helmetInHand={helmetInHand}
             dismounted={dismounted}
             showSchool={step === 4}
             strayed={strayed}
