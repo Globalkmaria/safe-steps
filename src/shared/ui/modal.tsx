@@ -45,7 +45,13 @@ export function Modal({
     return () => observer.disconnect();
   }, []);
 
-  const scale = size.frame && size.card ? Math.min(1, size.frame / size.card) : 1;
+  // 팝업이 세로를 꽉 채우지 않도록 위아래로 남겨 두는 여유(상하 10px 씩).
+  // 세로가 짧은 기기에서는 축소 비율이 화면 높이로 정해지는데, 그대로 두면 팝업이
+  // 위아래 가장자리에 거의 닿는다. 높이가 넉넉한 화면에서는 어차피 1 로 잘리므로
+  // 이 값이 걸리지 않는다 — 최대 크기에만 작용한다.
+  const BREATHING_ROOM = 20;
+  const room = Math.max(0, size.frame - BREATHING_ROOM);
+  const scale = size.frame && size.card ? Math.min(1, room / size.card) : 1;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/45 p-2 backdrop-blur-sm sm:p-4">
