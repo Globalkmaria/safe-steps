@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { unlockAudio } from "@/shared/lib/audio";
-import { ROUTES, SITE_NAME, SITE_TAGLINE } from "@/shared/config/site";
+import { ROUTES, SITE_NAME, SITE_TAGLINE } from "@/shared/config";
 
 export function HomePage() {
   return (

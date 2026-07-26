@@ -1,7 +1,7 @@
 "use client";
 
 import { Modal } from "@/shared/ui/modal";
-import { QuizTitle } from "./QuizTitle";
+import { QuizTitle } from "@/views/game/ui/QuizTitle";
 import { DinoFace } from "@/views/game/ui/DinoFace";
 import { signalPixels } from "@/views/game/model/scene";
 

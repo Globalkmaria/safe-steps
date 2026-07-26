@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Modal } from "@/shared/ui/modal";
-import { QuizTitle } from "./QuizTitle";
+import { QuizTitle } from "@/views/game/ui/QuizTitle";
 import { DinoOnBike } from "@/views/game/ui/DinoOnBike";
 import { VoxelFigure } from "@/views/game/ui/VoxelFigure";
 import { buildHelmet, buildPizza, HELMET_CAMERA, THUMB_CAMERA } from "@/views/game/model/scene";

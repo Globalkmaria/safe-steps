@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { SITE_NAME, SITE_TAGLINE } from "@/shared/config/site";
+import { SITE_NAME, SITE_TAGLINE } from "@/shared/config";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";

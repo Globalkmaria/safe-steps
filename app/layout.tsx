@@ -5,7 +5,7 @@ import {
   SITE_NAME,
   SITE_TAGLINE,
   SITE_URL,
-} from "@/shared/config/site";
+} from "@/shared/config";
 import "./globals.css";
 
 const nunito = Nunito({
