@@ -18,10 +18,14 @@ import { useCrosswalkGame } from "@/views/game/model/use-crosswalk-game";
 const DINO_COLOR = "#62b73a";
 
 /**
- * 버튼을 누르고 초록불까지의 시간. 신호 전환이 "바로" 느껴지도록 짧게 잡되 0 은 아니다 —
- * 색이 즉시 튀면 고장처럼 보이고, 이 구간의 깜빡임이 곧 "기다리는 중" 이라는 신호다.
+ * 초록을 고르고 실제로 불이 바뀌기까지 빨간불 앞에서 기다리는 시간.
+ *
+ * 이 게임이 가르치려는 것이 "빨간불에는 서서 기다리고 초록불에 건넌다" 이므로,
+ * 기다리는 구간이 눈에 남을 만큼 길어야 한다. 짧으면 고르자마자 바뀌어서
+ * 기다림이 없었던 것처럼 느껴진다. 이 구간에는 신호가 깜빡이고 말풍선이
+ * "The light is changing…" 을 띄운다.
  */
-const WAIT_SECONDS = 0.6;
+const WAIT_SECONDS = 2.6;
 const CROSS_SECONDS = 3.4;
 
 /** 축하 연출(색종이)을 보고 난 뒤 마무리 팝업이 뜨기까지 */

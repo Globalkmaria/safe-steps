@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useFocusTrap } from "@/shared/lib/use-focus-trap";
 import {
   buildDino,
@@ -71,7 +71,12 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
   // 무대를 남은 공간에 맞춰 축소한다. 확대는 하지 않는다(1 이 상한).
   const frameRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  /**
+   * 아직 못 잰 상태는 null 이다. 0 이나 1 로 두면 서버가 보낸 HTML 이 그 크기로 먼저
+   * 그려지고 하이드레이션 후에 줄어든다 — 화면이 짧을수록 크게 나타났다 작아진다.
+   * 잴 때까지는 자리만 잡고 숨긴다.
+   */
+  const [scale, setScale] = useState<number | null>(null);
 
   // 버튼이 아니라 화면 자체에 포커스를 둔다 — Modal 과 같은 이유(파란 링이
   // 처음부터 보이지 않도록). Tab 을 누르면 "Bye, Mum!" 으로 간다.
@@ -81,9 +86,12 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
 
   useFocusTrap(frameRef);
 
-  useEffect(() => {
+  // 첫 페인트 전에 한 번 잰다. useEffect 로 미루면 첫 프레임이 원래 크기로 그려지고
+  // 곧바로 줄어들어, 화면이 짧을수록 크게 나타났다 작아지는 것처럼 보인다.
+  useLayoutEffect(() => {
     const el = stageRef.current;
     if (!el) return;
+    setScale(Math.min(1, el.clientWidth / STAGE_W, el.clientHeight / STAGE_H));
     const observer = new ResizeObserver(([entry]) => {
       if (!entry) return;
       const { width, height } = entry.contentRect;
@@ -115,7 +123,8 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
         style={{
           width: STAGE_W,
           height: STAGE_H,
-          transform: `translate(-50%,-50%) scale(${scale})`,
+          transform: `translate(-50%,-50%) scale(${scale ?? 1})`,
+          visibility: scale === null ? "hidden" : undefined,
         }}
       >
         {/* 엄마 — 뒤쪽에 선다 */}

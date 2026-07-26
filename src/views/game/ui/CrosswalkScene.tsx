@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import {
   buildBike,
@@ -66,11 +66,15 @@ export function CrosswalkScene({
   crossSeconds,
 }: CrosswalkSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  // 잴 때까지는 숨긴다 — 서버 HTML 이 원래 크기로 먼저 그려지는 것을 막는다.
+  const [scale, setScale] = useState<number | null>(null);
 
-  useEffect(() => {
+  // 첫 페인트 전에 한 번 잰다. useEffect 로 미루면 첫 프레임이 원래 크기로 그려지고
+  // 곧바로 줄어들어, 화면이 짧을수록 크게 나타났다 작아지는 것처럼 보인다.
+  useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    setScale(Math.min(el.clientWidth / STAGE_WIDTH, el.clientHeight / STAGE_HEIGHT));
     const observer = new ResizeObserver(([entry]) => {
       if (!entry) return;
       const { width, height } = entry.contentRect;
@@ -178,7 +182,8 @@ export function CrosswalkScene({
         style={{
           width: STAGE_WIDTH,
           height: STAGE_HEIGHT,
-          transform: `translate(-50%,-50%) scale(${scale})`,
+          transform: `translate(-50%,-50%) scale(${scale ?? 1})`,
+          visibility: scale === null ? "hidden" : undefined,
           transformOrigin: "center center",
         }}
       >
