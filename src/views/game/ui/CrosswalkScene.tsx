@@ -285,7 +285,10 @@ export function CrosswalkScene({
           </div>
 
           {phase === "success" && (
-            <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div
+              aria-hidden
+              className="ss-confetti pointer-events-none absolute inset-0 overflow-hidden"
+            >
               {Array.from({ length: 34 }, (_, i) => {
                 const colors = ["#f2b21c", "#5fbb3f", "#4a9df0", "#f0723a", "#ffffff", "#e857a0"];
                 return (

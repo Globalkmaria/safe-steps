@@ -172,6 +172,15 @@ textarea {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  /**
+   * 색종이는 위 규칙으로 줄일 수 없다. 낙하 애니메이션을 한 프레임에 끝내면
+   * 축하가 사라지는 게 아니라 조각들이 화면 한복판에 가로 줄로 멈춰 서서,
+   * 축하가 아니라 렌더링 오류처럼 보인다. 움직임이 곧 내용인 장식이라 통째로 뺀다.
+   */
+  .ss-confetti {
+    display: none !important;
+  }
 }
 
 /* 자전거를 타고 왼쪽에서 들어오는 등장 */
