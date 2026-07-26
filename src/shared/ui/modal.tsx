@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useFocusTrap } from "@/shared/lib/use-focus-trap";
 
@@ -36,7 +36,10 @@ export function Modal({
 
   useFocusTrap(cardRef);
 
-  useEffect(() => {
+  // 첫 페인트 **전에** 한 번 재야 한다. useEffect 로 미루면 첫 프레임이 축소 없이
+  // 그려지고, 등장 애니메이션이 제 크기로 다 진행된 다음에야 줄어든다 —
+  // 화면이 짧은 기기에서는 그 사이 팝업이 화면보다 커졌다가 작아진다.
+  useLayoutEffect(() => {
     const frame = frameRef.current;
     const card = cardRef.current;
     if (!frame || !card) return;
@@ -46,6 +49,7 @@ export function Modal({
     const measure = () =>
       setSize({ frame: frame.clientHeight, card: card.offsetHeight });
 
+    measure();
     const observer = new ResizeObserver(measure);
     observer.observe(frame);
     observer.observe(card);
@@ -88,7 +92,7 @@ export function Modal({
               // 높이는 내용이 정하므로 상하 여백으로 줄인다(폭은 위의 max-w 담당)
               data-focus-shell
               className="rounded-[2rem] border-8 border-white bg-[#fffdf7] px-4 py-1.5 shadow-[0_18px_0_rgba(30,60,80,.18),0_28px_60px_rgba(20,50,70,.28)] sm:px-6 sm:py-3.5"
-              style={{ animation: "ss-pop .35s cubic-bezier(.2,1.4,.5,1) both" }}
+              style={{ animation: "ss-pop .35s cubic-bezier(.2,.9,.4,1) both" }}
             >
               {children}
             </div>

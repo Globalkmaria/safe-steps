@@ -124,13 +124,21 @@ textarea {
     opacity: 0.25;
   }
 }
+/**
+ * 팝업 등장.
+ *
+ * 튀는 양이 작다. 팝업은 이미 화면 높이에 맞춰 축소된 상태로 뜨는데(위아래 10px 만
+ * 남는다), 여기서 더 커지면 화면을 넘어선다 — 짧은 기기에서 "커졌다 작아지는" 것으로
+ * 보이던 원인이다. 살아 있는 느낌은 0.2 에서 솟는 데서 나오지 1 을 넘기는 데서
+ * 나오지 않는다. 이 값을 올리려면 modal.tsx 의 BREATHING_ROOM 도 같이 봐야 한다.
+ */
 @keyframes ss-pop {
   0% {
     transform: scale(0.2);
     opacity: 0;
   }
   60% {
-    transform: scale(1.15);
+    transform: scale(1.04);
     opacity: 1;
   }
   100% {
