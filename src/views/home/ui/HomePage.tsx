@@ -7,15 +7,17 @@ import { ROUTES, SITE_NAME, SITE_TAGLINE } from "@/shared/config";
 export function HomePage() {
   return (
     <main
-      className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-gradient-to-b from-sky-200 to-emerald-100 p-6 pb-safe text-center"
+      className="home-frame flex min-h-dvh flex-col items-center justify-center gap-6 bg-gradient-to-b from-sky-200 to-emerald-100 p-6 pb-safe text-center"
     >
-      <span className="text-7xl" aria-hidden>
-        🚸
-      </span>
-      <h1 className="font-[family-name:var(--font-baloo)] text-5xl font-extrabold text-slate-800">
-        {SITE_NAME}
-      </h1>
-      <p className="max-w-sm text-lg font-bold text-slate-600">{SITE_TAGLINE}</p>
+      <div className="home-headline flex flex-col items-center gap-6">
+        <span className="text-7xl" aria-hidden>
+          🚸
+        </span>
+        <h1 className="font-[family-name:var(--font-baloo)] text-5xl font-extrabold text-slate-800">
+          {SITE_NAME}
+        </h1>
+        <p className="max-w-sm text-lg font-bold text-slate-600">{SITE_TAGLINE}</p>
+      </div>
 
       <Link
         href={ROUTES.game}
