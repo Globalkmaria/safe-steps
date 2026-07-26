@@ -232,6 +232,74 @@ textarea {
 }
 
 /**
+ * 인트로의 말풍선 꼬리.
+ *
+ * 꼬리가 없으면 엄마의 대사와 아이의 대답이 둘 다 그냥 둥근 상자라, 어느 쪽이
+ * 읽는 것이고 어느 쪽이 누르는 것인지 구분이 안 된다. 꼬리를 달아 "대화"로 만들고,
+ * 채팅 관습대로 상대(엄마)는 왼쪽, 내가 할 말(아이)은 오른쪽에서 나오게 한다.
+ *
+ * 삼각형은 상자의 흰 테두리와 같은 색이다 — 테두리가 뾰족하게 이어져 나온 것처럼 보인다.
+ */
+.speech {
+  position: relative;
+}
+
+.speech::after {
+  content: "";
+  position: absolute;
+  border: 15px solid transparent;
+}
+
+/*
+ * 엄마 말은 위(캐릭터 쪽)를 가리킨다. 상자 모서리 반경이 2rem 이라 꼬리를 2rem 에
+ * 두면 곡선 위에 얹혀 뾰족한 게 아니라 혹처럼 보인다 — 곡선이 끝난 뒤로 물린다.
+ */
+.speech-mum::after {
+  bottom: 100%;
+  left: 3.25rem;
+  border-bottom-color: #fff;
+}
+
+/*
+ * 아이의 대답은 옆으로 뺀다. 세로로 쌓인 배치에서 위를 가리키면 꼬리가 반드시
+ * 엄마 말풍선 밑변에 닿아, 엄마가 한 말처럼 보인다.
+ */
+.speech-kid::after {
+  left: 100%;
+  top: 50%;
+  margin-top: -15px;
+  border-left-color: #fff;
+}
+
+/* 누를 수 있다는 신호 — 버튼 테두리를 따라 링이 퍼져 나간다 */
+@keyframes ss-tap-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  60%,
+  100% {
+    transform: scale(1.16);
+    opacity: 0;
+  }
+}
+
+/* 손가락이 톡 누르는 시늉 */
+@keyframes ss-tap-hand {
+  0%,
+  62%,
+  100% {
+    transform: translateY(0) rotate(-8deg);
+  }
+  72% {
+    transform: translateY(-5px) rotate(-8deg);
+  }
+  82% {
+    transform: translateY(2px) rotate(-8deg);
+  }
+}
+
+/**
  * 낮은 화면(높이 500px 이하)에서는 인트로를 좌우로 나눈다.
  *
  * 세로로 쌓으면 남는 높이를 말풍선·버튼이 가져가고 캐릭터가 눌려 아주 작아진다.
@@ -248,5 +316,17 @@ textarea {
   }
   .intro-side {
     flex: 1 1 0%;
+  }
+  /* 캐릭터가 왼쪽으로 갔으므로 두 꼬리 모두 왼쪽을 가리켜야 말이 그쪽에서 나온 게 된다 */
+  .speech-mum::after,
+  .speech-kid::after {
+    bottom: auto;
+    left: auto;
+    right: 100%;
+    top: 50%;
+    margin-top: -15px;
+    border-bottom-color: transparent;
+    border-left-color: transparent;
+    border-right-color: #fff;
   }
 }

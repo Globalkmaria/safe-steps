@@ -54,8 +54,10 @@ export function Modal({
           축소한 뒤의 높이를 자리로 잡아준다. 이게 없으면 원래 높이를 기준으로 가운데
           정렬돼서, 줄어든 팝업이 위아래 어느 한쪽으로 밀린다.
         */}
+        {/* 652px = max-w-2xl(672) 에서 좌우 10px 씩. 폭은 여기서만 줄어든다 —
+            아래 카드의 좌우 여백을 줄이면 글 줄바꿈이 달라질 뿐 상자는 그대로다. */}
         <div
-          className="w-full max-w-2xl"
+          className="w-full max-w-[652px]"
           style={{ height: size.card ? size.card * scale : undefined }}
         >
           {/* 맞춤 축소와 등장 애니메이션을 다른 요소에 건다 — 한 요소에 두면
@@ -68,7 +70,9 @@ export function Modal({
               role="dialog"
               aria-modal="true"
               aria-labelledby={labelledBy}
-              className="rounded-[2rem] border-8 border-white bg-[#fffdf7] p-4 shadow-[0_18px_0_rgba(30,60,80,.18),0_28px_60px_rgba(20,50,70,.28)] sm:p-6"
+              // 높이는 내용이 정하므로 상하 여백에서 10px 씩 덜어낸다.
+              // 좌우는 그대로 — 폭은 위의 max-w 가 이미 20px 줄였다.
+              className="rounded-[2rem] border-8 border-white bg-[#fffdf7] px-4 py-1.5 shadow-[0_18px_0_rgba(30,60,80,.18),0_28px_60px_rgba(20,50,70,.28)] sm:px-6 sm:py-3.5"
               style={{ animation: "ss-pop .35s cubic-bezier(.2,1.4,.5,1) both" }}
             >
               {children}
