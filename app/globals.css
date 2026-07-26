@@ -10,6 +10,15 @@
 :root {
   --background: #e9f3fb;
   --foreground: #33434f;
+  /**
+   * 화면 가장자리에서 띄우는 여백. 게임 화면·인트로·팝업이 모두 이 값을 쓴다.
+   * 높이 계산(100dvh - 2 * 이 값)에도 들어가므로 한 곳에서만 바꾼다.
+   */
+  --app-inset: 10px;
+}
+
+body {
+  padding: var(--app-inset);
 }
 
 body {
@@ -228,5 +237,25 @@ textarea {
 @keyframes ss-wheel {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/**
+ * 낮은 화면(높이 500px 이하)에서는 인트로를 좌우로 나눈다.
+ *
+ * 세로로 쌓으면 남는 높이를 말풍선·버튼이 가져가고 캐릭터가 눌려 아주 작아진다.
+ * 가로로 펴면 캐릭터는 높이를 온전히 쓰고, 글과 버튼은 옆에서 자기 폭만 차지한다.
+ * Tailwind 임의 변형(@media)을 다섯 군데 반복하는 대신 여기 한 곳에 모았다.
+ */
+@media (max-height: 500px) {
+  .intro-frame {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+  .intro-stage {
+    height: 100%;
+  }
+  .intro-side {
+    flex: 1 1 0%;
   }
 }

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!--
+    Safe Steps 파비콘 — 게임 속 공룡의 얼굴.
+
+    씬의 복셀 모델을 캡처하는 대신 같은 색으로 다시 그렸다. 파비콘은 16px 까지
+    줄어드는데, 복셀 모델을 축소하면 면과 격자가 뭉개져 초록 얼룩이 된다.
+    각진 사각형만 써서 복셀 인상은 유지하되, 그 크기에서 살아남는 요소
+    — 둥근 머리, 큰 두 눈, 주황 볏 — 만 남겼다.
+  -->
+  <rect width="64" height="64" rx="14" fill="#eaf6df" />
+
+  <!-- 볏 -->
+  <rect x="25" y="7" width="6" height="9" fill="#f0871f" />
+  <rect x="34" y="5" width="6" height="11" fill="#f0871f" />
+
+  <!-- 머리 -->
+  <rect x="9" y="14" width="46" height="38" rx="4" fill="#62b73a" />
+  <rect x="9" y="14" width="46" height="7" rx="4" fill="#7ecb4f" />
+  <rect x="9" y="18" width="46" height="3" fill="#7ecb4f" />
+
+  <!-- 눈 -->
+  <rect x="16" y="24" width="12" height="13" rx="1.5" fill="#fdfdf8" />
+  <rect x="36" y="24" width="12" height="13" rx="1.5" fill="#fdfdf8" />
+  <rect x="19" y="27" width="6" height="7" fill="#26221f" />
+  <rect x="39" y="27" width="6" height="7" fill="#26221f" />
+
+  <!-- 주둥이 -->
+  <rect x="16" y="40" width="32" height="10" rx="3" fill="#8ad25c" />
+  <rect x="22" y="44" width="20" height="3" rx="1.5" fill="#3c6f22" />
+</svg>

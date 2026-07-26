@@ -208,10 +208,17 @@ export function GamePage() {
 
   return (
     <div
-      className="min-h-dvh w-full"
-      style={{ background: "linear-gradient(#8fd0f5 0%, #b9e4f7 52%, #d8f0e2 100%)" }}
+      className="w-full"
+      // body 여백만큼 뺀 높이. 그대로 100dvh 를 쓰면 여백이 더해져 스크롤이 생긴다.
+      style={{
+        minHeight: "calc(100dvh - 2 * var(--app-inset))",
+        background: "linear-gradient(#8fd0f5 0%, #b9e4f7 52%, #d8f0e2 100%)",
+      }}
     >
-      <main className="relative mx-auto flex h-dvh w-full max-w-[1024px] flex-col">
+      <main
+        className="relative mx-auto flex w-full max-w-[1024px] flex-col"
+        style={{ height: "calc(100dvh - 2 * var(--app-inset))" }}
+      >
         <div className="min-h-0 flex-1">
           <CrosswalkScene
             phase={phase}

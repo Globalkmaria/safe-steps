@@ -82,10 +82,14 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-4"
-      style={{ background: "linear-gradient(#ffe9c2 0%, #ffd7d2 55%, #ffeede 100%)" }}
+      className="intro-frame fixed z-50 flex flex-col items-center justify-center gap-4 p-4"
+      // fixed 는 body 여백을 무시하므로 직접 같은 만큼 안쪽에 붙인다
+      style={{
+        inset: "var(--app-inset)",
+        background: "linear-gradient(#ffe9c2 0%, #ffd7d2 55%, #ffeede 100%)",
+      }}
     >
-      <div ref={stageRef} className="relative min-h-0 w-full max-w-[420px] flex-1">
+      <div ref={stageRef} className="intro-stage relative min-h-0 w-full max-w-[420px] flex-1">
       <div
         className="absolute left-1/2 top-1/2 overflow-hidden"
         style={{
@@ -137,6 +141,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
       </div>
       </div>
 
+      <div className="intro-side flex shrink-0 flex-col items-center gap-4">
       <p className="shrink-0 rounded-[2rem] border-4 border-white bg-[#fffdf7] px-6 py-3 text-center font-[family-name:var(--font-baloo)] text-2xl font-extrabold text-slate-800 shadow-[0_10px_0_rgba(30,60,80,.16)] sm:border-8 sm:px-8 sm:py-5 sm:text-3xl">
         Have a good day at school!
       </p>
@@ -149,6 +154,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
       >
         Bye, Mum!
       </button>
+      </div>
     </div>
   );
 }

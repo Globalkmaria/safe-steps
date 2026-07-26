@@ -26,7 +26,8 @@ export function OrientationPrompt({ children }: { children: ReactNode }) {
   return (
     <div
       role="alert"
-      className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-sky-50 p-8 text-center"
+      className="flex flex-col items-center justify-center gap-6 bg-sky-50 p-8 text-center"
+      style={{ minHeight: "calc(100dvh - 2 * var(--app-inset))" }}
     >
       <span className="animate-[rotate-hint_2.4s_ease-in-out_infinite] text-7xl" aria-hidden>
         📱
