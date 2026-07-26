@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Modal } from "@/shared/ui/modal";
+import { QuizTitle } from "./QuizTitle";
 import { DinoOnBike } from "@/views/game/ui/DinoOnBike";
 import { VoxelFigure } from "@/views/game/ui/VoxelFigure";
 import { buildHelmet, buildPizza, HELMET_CAMERA, THUMB_CAMERA } from "@/views/game/model/scene";
@@ -52,12 +53,7 @@ export function BikeQuiz({ onSelect }: { onSelect: (choice: BikeChoice) => void 
 
   return (
     <Modal labelledBy="bike-quiz-title">
-      <h2
-        id="bike-quiz-title"
-        className="text-center font-[family-name:var(--font-baloo)] text-3xl font-extrabold text-slate-800"
-      >
-        You are riding your bike. What should you take?
-      </h2>
+      <QuizTitle id="bike-quiz-title">You are riding your bike. What should you take?</QuizTitle>
 
       <div className="mt-4 flex items-center justify-center gap-3">
         <ChoiceButton

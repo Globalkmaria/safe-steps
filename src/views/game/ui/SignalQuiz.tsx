@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal } from "@/shared/ui/modal";
+import { QuizTitle } from "./QuizTitle";
 import { DinoFace } from "@/views/game/ui/DinoFace";
 import { signalPixels } from "@/views/game/model/scene";
 
@@ -75,12 +76,7 @@ function ChoiceButton({
 export function SignalQuiz({ onSelect }: { onSelect: (choice: SignalChoice) => void }) {
   return (
     <Modal labelledBy="signal-quiz-title">
-      <h2
-        id="signal-quiz-title"
-        className="text-center font-[family-name:var(--font-baloo)] text-3xl font-extrabold text-slate-800"
-      >
-        Which light means it is safe to cross?
-      </h2>
+      <QuizTitle id="signal-quiz-title">Which light means it is safe to cross?</QuizTitle>
 
       <div className="mt-6 flex items-center justify-center gap-5">
         <ChoiceButton kind="green" label="Green" onSelect={onSelect} />

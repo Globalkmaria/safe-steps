@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Modal } from "@/shared/ui/modal";
+import { QuizTitle } from "./QuizTitle";
 import { VoxelFigure } from "@/views/game/ui/VoxelFigure";
 import type { Face } from "@/views/game/model/scene";
 import {
@@ -167,12 +168,7 @@ export function CrossingModeQuiz({
 }) {
   return (
     <Modal labelledBy="crossing-mode-title">
-      <h2
-        id="crossing-mode-title"
-        className="text-center font-[family-name:var(--font-baloo)] text-3xl font-extrabold text-slate-800"
-      >
-        You reached the crossing. How do you get across?
-      </h2>
+      <QuizTitle id="crossing-mode-title">You reached the crossing. How do you get across?</QuizTitle>
 
       <div className="mt-5 flex items-start justify-center gap-4">
         <ChoiceButton

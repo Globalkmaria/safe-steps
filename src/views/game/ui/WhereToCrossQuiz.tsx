@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Modal } from "@/shared/ui/modal";
+import { QuizTitle } from "./QuizTitle";
 import { VoxelFigure } from "@/views/game/ui/VoxelFigure";
 import {
   buildBike,
@@ -105,12 +106,7 @@ export function WhereToCrossQuiz({
 }) {
   return (
     <Modal labelledBy="where-to-cross-title">
-      <h2
-        id="where-to-cross-title"
-        className="text-center font-[family-name:var(--font-baloo)] text-3xl font-extrabold text-slate-800"
-      >
-        School is just across the road. Where do you cross?
-      </h2>
+      <QuizTitle id="where-to-cross-title">School is just across the road. Where do you cross?</QuizTitle>
 
       <div className="mt-5 flex items-start justify-center gap-4">
         <ChoiceButton
