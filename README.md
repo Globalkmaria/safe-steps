@@ -5,7 +5,7 @@ Made with love by Maria, Rufina & Yejin @ Builders Only 2
 **세계의 모든 어린이가 안전하게 길을 건널 수 있도록 만들었습니다.**
 **Built so that children everywhere can cross the road safely.**
 
-### ▶︎ [지금 해보기 / Play now](https://cross-ecru.vercel.app/game)
+### ▶︎ [지금 해보기 / Play now](https://safe-steps-jet.vercel.app/game)
 
 > 화면의 가로가 세로보다 길어야 합니다. 세로로 긴 화면에서는 돌려 달라는 안내가 나옵니다.
 > Needs a window wider than it is tall — a tall screen asks you to rotate it instead.
@@ -60,7 +60,7 @@ Safe Steps 는 **안전하게 틀려볼 수 있는 곳**입니다.
 
 ### 실행
 
-배포본은 **<https://cross-ecru.vercel.app/game>** 에서 바로 볼 수 있습니다. 직접 돌리시려면:
+배포본은 **<https://safe-steps-jet.vercel.app/game>** 에서 바로 볼 수 있습니다. 직접 돌리시려면:
 
 ```bash
 npm install
@@ -114,7 +114,7 @@ the character or putting a helmet on it is a line of code rather than a redrawn 
 
 ### Running it
 
-A deployed copy lives at **<https://cross-ecru.vercel.app/game>**. To run it yourself:
+A deployed copy lives at **<https://safe-steps-jet.vercel.app/game>**. To run it yourself:
 
 ```bash
 npm install
