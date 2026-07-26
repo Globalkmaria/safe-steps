@@ -22,16 +22,12 @@ const CAMERA_THETA_DEG = 52;
 /**
  * 카메라 회전(수평으로 도는 각).
  *
- * 원본 프로토타입은 -24° 였다. 회전 이력: -24 → 66 → 156 → 66.
- *
- * 참고 — 180° 회전은 "뒷모습" 요구를 만족할 수 없다(뒷모습의 정반대는 앞모습).
- * 그리고 156° 에서만 신호등 패널이 카메라를 향해 빨강/초록이 보인다. 현재 66° 에서는
- * 패널이 반대편을 보므로 불빛이 화면에 안 나온다 — 신호 판단을 화면 밖 단서(말풍선·
- * 미션 체크)에 의존하게 되므로, 게임 기획 단계에서 다시 볼 것.
- *
  * ⚠️ 이 값 하나가 세 곳을 동시에 지배한다: CSS 카메라 transform, 면 깊이 정렬(depth),
  * 캐릭터 이동의 화면 방향(screenDelta). 셋이 어긋나면 겹침 순서가 뒤집히거나
  * 캐릭터가 엉뚱한 방향으로 걷는다. 그래서 상수 하나에서 전부 파생시킨다.
+ *
+ * 이 각에서는 신호등 함체가 카메라를 등지므로, 패널은 SIGNAL_TURN_DEG 로 따로 돌려
+ * 세운다. 카메라 각을 바꾸면 그 값도 같이 봐야 불빛이 화면에서 사라지지 않는다.
  */
 const CAMERA_PHI_DEG = 66;
 
@@ -411,17 +407,9 @@ export const DINO_BUILD_Y = 15.5;
 /**
  * 머리 위(쓴 자리)에서 손(든 자리)까지의 월드 오프셋.
  *
- * 헬멧을 손에 들었다가 쓰는 장면에 쓴다. 헬멧은 늘 머리 기준으로 만들어지므로,
- * 손에 든 상태는 "머리에서 이만큼 옮긴 것"으로 표현하는 게 가장 단순하다.
- *
- * 값은 팔의 실제 좌표(x 3.0~3.8, z 4.6~6.2)가 아니라 화면상 이동량을 보고 정했다.
- * 이 투영에서는 -x 가 화면 위로 올라가서, 팔 쪽으로 빼내는 만큼 내려가는 양이
- * 상쇄된다. 실제 팔 좌표를 그대로 쓰면 헬멧이 20px 남짓 꿈틀하고 말아서
- * 손에 들었다는 게 안 읽힌다. 그래서 옆으로 벌리는 몫은 -x 대신 +y(카메라 쪽,
- * 즉 몸 앞으로 내미는 방향)가 맡는다 — 화면에서 왼쪽 아래로 간다.
- *
- * 지금 값의 화면상 결과는 약 (-39px, +52px) — 머리에서 팔·허리 높이까지다.
- * 바꿀 때는 screenDelta 를 통과시킨 값을 보고 정할 것.
+ * 팔의 실제 좌표가 아니라 화면상 이동량을 보고 정한다 — 이 투영에서는 -x 가 화면
+ * 위로 가서 -z 로 내린 만큼을 상쇄하므로, 팔 좌표를 그대로 넣으면 헬멧이 20px 남짓
+ * 움직이고 만다. 바꿀 때는 screenDelta 를 통과시킨 결과로 판단할 것.
  */
 export const HELMET_HAND_OFFSET = { x: 0.5, y: 1.2, z: -8.0 };
 
@@ -430,11 +418,7 @@ export interface DinoOptions {
   /** 머리에 헬멧을 씌운다 — 자전거 스텝을 통과한 뒤의 모습 */
   withHelmet?: boolean;
   /**
-   * 헬멧 면들을 몸 면들과 섞지 않고 여기에 따로 담는다.
-   *
-   * 헬멧을 손에 들었다가 머리에 쓰는 장면 때문에 필요하다. 한 배열로 받으면
-   * 헬멧만 움직일 수가 없다. 위치 계산은 그대로 머리 상자에서 파생되므로,
-   * 받은 쪽은 이 배열을 통째로 HELMET_HAND_OFFSET 만큼 옮겼다가 0 으로 되돌리면 된다.
+   * 헬멧 면을 몸과 섞지 않고 여기에 담는다. 한 배열로 받으면 헬멧만 따로 움직일 수 없다.
    */
   helmetOut?: Face[];
   /** 안장에 앉도록 통째로 들어올린다(자전거를 탈 때) */
@@ -611,9 +595,9 @@ export const SIGNAL_TURN_DEG = -90;
 /**
  * 신호등 머리 크기 배율(원본 = 1).
  *
- * 이 게임에서 아이가 "지금 건너도 되는가" 를 판단할 근거는 신호색 하나뿐이다.
- * 씬이 중앙 열(약 512px)에 맞춰 절반 크기로 축소돼 렌더되므로, 원본 크기로는
- * 정작 읽어야 할 것이 가장 안 읽힌다. 함체와 패널이 이 값 하나로 같이 커진다.
+ * 이 게임에서 아이가 "지금 건너도 되는가" 를 판단할 근거는 신호색 하나뿐인데,
+ * 씬은 화면에 맞춰 축소돼 렌더되므로 원본 크기로는 정작 읽어야 할 것이 가장 안 읽힌다.
+ * 함체와 패널이 이 값 하나로 같이 커진다.
  */
 const SIGNAL_SCALE = 1.4;
 
@@ -810,7 +794,8 @@ function disc(
  * 뚫린 속은 box() 가 뒷면·밑면을 안 그리므로 그대로 배경이 비쳐 보인다 — 레퍼런스의
  * 투명한 구멍과 같은 결과다.
  */
-export function buildHelmet(cam: CameraConfig = HELMET_CAMERA): Face[] {
+/** @param detail 복셀 칸 크기 배율. 썸네일에서는 굵게 그려 노드 수를 줄인다. */
+export function buildHelmet(cam: CameraConfig = HELMET_CAMERA, detail = 1): Face[] {
   const faces: Face[] = [];
   const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
     box(faces, cam, x, y, z, w, d, h, c);
@@ -820,7 +805,7 @@ export function buildHelmet(cam: CameraConfig = HELMET_CAMERA): Face[] {
   const VISOR = "#c3c9ce";
   const STRAP = "#a6231f";
 
-  const CELL = 0.8;
+  const CELL = 0.8 * detail;
   const LAYERS = 8;
   const MAX_R = 4.8;
   /** 껍데기 두께 */
@@ -875,7 +860,11 @@ export function buildHelmet(cam: CameraConfig = HELMET_CAMERA): Face[] {
  * 원형은 격자 위에서 반지름 안에 드는 칸만 채워 만든다. 층을 쌓아 도우 → 소스 →
  * 치즈 순으로 올리고, 토핑은 치즈 위에 개별 상자로 얹는다.
  */
-export function buildPizza(cam: CameraConfig = PORTRAIT_CAMERA): Face[] {
+/**
+ * @param cell 복셀 한 칸 크기. 키우면 칸 수가 제곱으로 줄어든다 — 150px 썸네일에서는
+ *   칸 하나가 육안으로 구분되지 않으므로 굵게 그려도 그림이 같고 노드만 줄어든다.
+ */
+export function buildPizza(cam: CameraConfig = PORTRAIT_CAMERA, cell = 1): Face[] {
   const faces: Face[] = [];
   const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
     box(faces, cam, x, y, z, w, d, h, c);
@@ -890,9 +879,9 @@ export function buildPizza(cam: CameraConfig = PORTRAIT_CAMERA): Face[] {
 
   const R = 5.6;
 
-  disc(B, R, 0, 0.9, DOUGH); // 도우 + 크러스트 테두리
-  disc(B, R - 1.1, 0.9, 0.25, SAUCE); // 소스 링
-  disc(B, R - 2.0, 1.15, 0.2, CHEESE); // 치즈
+  disc(B, R, 0, 0.9, DOUGH, cell); // 도우 + 크러스트 테두리
+  disc(B, R - 1.1, 0.9, 0.25, SAUCE, cell); // 소스 링
+  disc(B, R - 2.0, 1.15, 0.2, CHEESE, cell); // 치즈
 
   // 토핑 — 페퍼로니는 2×2 로 조금 크게, 나머지는 한 칸
   const PEPPERONIS: Array<[number, number]> = [

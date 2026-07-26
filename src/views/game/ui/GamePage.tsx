@@ -69,11 +69,8 @@ const BUBBLE_TEXT = {
 type Step = 1 | 2 | 3 | 4;
 
 /**
- * 지금 떠 있는 화면. 팝업은 언제나 정확히 하나이거나 없다.
- *
- * 예전에는 이걸 boolean 11개로 표현했는데, 타입이 "둘 다 true" 를 막아주지 못해
- * 실제로 재시도 팝업과 성공 팝업이 동시에 뜨는 일이 있었다(aria-modal 이 두 개).
- * 하나의 값으로 만들면 그 조합 자체가 표현 불가능해진다.
+ * 지금 떠 있는 화면. 팝업은 언제나 하나이거나 없다 — 하나의 값으로 두어야
+ * "둘이 동시에 뜬다" 는 상태가 표현 자체로 불가능해진다. boolean 을 늘리지 말 것.
  */
 type Popup =
   | "intro"
@@ -145,8 +142,7 @@ export function GamePage() {
   }, [step, phase]);
 
   // 빨간불에 나서려다 멈추는 동작을 다 보여준 뒤 실패 팝업.
-  // 스텝을 조건에 넣는다 — 예전에는 렌더에서만 걸러서, 다른 스텝의 oops 가
-  // 보이지 않는 상태로 예약돼 있었다.
+  // 렌더가 아니라 여기서 스텝을 거른다 — 안 보이는 팝업이 예약되지 않도록.
   useEffect(() => {
     if (phase !== "oops" || step !== 3) return;
     const t = setTimeout(() => setPopup("signalRetry"), ABORT_MS);
@@ -248,10 +244,7 @@ export function GamePage() {
         background: "linear-gradient(#8fd0f5 0%, #b9e4f7 52%, #d8f0e2 100%)",
       }}
     >
-      {/*
-        팝업이 떠 있는 동안 배경은 통째로 비활성이다. 없으면 Shift+Tab 한 번으로
-        모달 밖 씬에 도달할 수 있어, 키보드 사용자에게는 모달이 모달이 아니게 된다.
-      */}
+      {/* 팝업 중 배경 비활성 — 없으면 Shift+Tab 으로 모달 밖 씬에 닿는다 */}
       <main
         inert={popup !== "none"}
         className="relative mx-auto flex h-dvh w-full max-w-[1024px] flex-col"

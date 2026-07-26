@@ -76,8 +76,7 @@ export function Modal({
               role="dialog"
               aria-modal="true"
               aria-labelledby={labelledBy}
-              // 높이는 내용이 정하므로 상하 여백에서 10px 씩 덜어낸다.
-              // 좌우는 그대로 — 폭은 위의 max-w 가 이미 20px 줄였다.
+              // 높이는 내용이 정하므로 상하 여백으로 줄인다(폭은 위의 max-w 담당)
               className="rounded-[2rem] border-8 border-white bg-[#fffdf7] px-4 py-1.5 shadow-[0_18px_0_rgba(30,60,80,.18),0_28px_60px_rgba(20,50,70,.28)] sm:px-6 sm:py-3.5"
               style={{ animation: "ss-pop .35s cubic-bezier(.2,1.4,.5,1) both" }}
             >

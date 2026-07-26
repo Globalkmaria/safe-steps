@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Modal } from "@/shared/ui/modal";
+import { QuizChoice } from "@/views/game/ui/QuizChoice";
 import { QuizTitle } from "@/views/game/ui/QuizTitle";
 import { VoxelFigure } from "@/views/game/ui/VoxelFigure";
 import {
@@ -83,16 +84,9 @@ function ChoiceButton({
   onSelect: (place: CrossingPlace) => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(place)}
-      className="group flex min-h-14 flex-col items-center gap-2 rounded-3xl border-4 border-white bg-white/70 p-3 shadow-[0_8px_0_rgba(30,60,80,.16)] transition duration-150 hover:-translate-y-1 hover:border-sky-200 hover:bg-white hover:shadow-[0_12px_0_rgba(30,60,80,.2)] active:translate-y-1 active:shadow-[0_4px_0_rgba(30,60,80,.16)]"
-    >
+    <QuizChoice label={label} onClick={() => onSelect(place)}>
       <PlacePreview place={place} bodyColor={bodyColor} />
-      <span className="text-lg font-extrabold text-slate-700 transition group-hover:text-slate-900">
-        {label}
-      </span>
-    </button>
+    </QuizChoice>
   );
 }
 
