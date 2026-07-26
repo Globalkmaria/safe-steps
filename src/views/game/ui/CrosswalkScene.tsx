@@ -237,48 +237,48 @@ export function CrosswalkScene({
                 }}
               >
                 <div style={strayStyle}>
-                <div
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    transformOrigin: "0 0",
-                    width: 6.4 * UNIT,
-                    height: 6.6 * UNIT,
-                    transform: `${CAMERA_TRANSFORM} translate3d(${2.9 * UNIT}px,${-21.2 * UNIT}px,${1.26 * UNIT}px)`,
-                    borderRadius: "50%",
-                    background:
-                      "radial-gradient(ellipse at center, rgba(20,40,20,.34), rgba(20,40,20,0) 68%)",
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    animation:
-                      phase === "crossing"
-                        ? "ss-walkbob .5s ease-in-out infinite"
-                        : phase === "oops"
-                          ? "ss-shake .5s ease-in-out 2"
-                          : "ss-bob 2.6s ease-in-out infinite",
-                  }}
-                >
-                  {bikeFaces.map((face, i) => (
-                    <div key={`b${i}`} className={face.className} style={face.style} />
-                  ))}
-                  <div style={dismountStyle}>
-                    {dinoFaces.map((face, i) => (
-                      <div key={`d${i}`} className={face.className} style={face.style} />
+                  <div
+                    aria-hidden
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      transformOrigin: "0 0",
+                      width: 6.4 * UNIT,
+                      height: 6.6 * UNIT,
+                      transform: `${CAMERA_TRANSFORM} translate3d(${2.9 * UNIT}px,${-21.2 * UNIT}px,${1.26 * UNIT}px)`,
+                      borderRadius: "50%",
+                      background:
+                        "radial-gradient(ellipse at center, rgba(20,40,20,.34), rgba(20,40,20,0) 68%)",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      animation:
+                        phase === "crossing"
+                          ? "ss-walkbob .5s ease-in-out infinite"
+                          : phase === "oops"
+                            ? "ss-shake .5s ease-in-out 2"
+                            : "ss-bob 2.6s ease-in-out infinite",
+                    }}
+                  >
+                    {bikeFaces.map((face, i) => (
+                      <div key={`b${i}`} className={face.className} style={face.style} />
                     ))}
-                    <div style={helmetStyle}>
-                      {helmetFaces.map((face, i) => (
-                        <div key={`h${i}`} className={face.className} style={face.style} />
+                    <div style={dismountStyle}>
+                      {dinoFaces.map((face, i) => (
+                        <div key={`d${i}`} className={face.className} style={face.style} />
                       ))}
+                      <div style={helmetStyle}>
+                        {helmetFaces.map((face, i) => (
+                          <div key={`h${i}`} className={face.className} style={face.style} />
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
                 </div>
               </div>
             </div>

@@ -212,15 +212,10 @@ export function GamePage() {
     setStrayRun((n) => n + 1);
   };
 
-  /**
-   * 재시도 — 기다리는 사이 불이 이미 초록으로 바뀌었을 수 있다.
-   * 그때 신호를 다시 물으면 답이 이미 정해진 질문이 되고, 무엇을 고르든
-   * 초록불 상태의 walk() 가 곧바로 성공으로 처리해 버린다. 그래서 되묻지 않는다.
-   */
   const handleSignalRetry = () => {
     setAutoCross(false);
-    const resumedOnGreen = tryAgain();
-    setPopup(resumedOnGreen ? "none" : "signalQuiz");
+    tryAgain();
+    setPopup("signalQuiz");
   };
 
   /** 처음부터 다시 — 씬과 팝업 상태를 모두 되돌린다 */

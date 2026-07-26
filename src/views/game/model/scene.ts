@@ -794,8 +794,7 @@ function disc(
  * 뚫린 속은 box() 가 뒷면·밑면을 안 그리므로 그대로 배경이 비쳐 보인다 — 레퍼런스의
  * 투명한 구멍과 같은 결과다.
  */
-/** @param detail 복셀 칸 크기 배율. 썸네일에서는 굵게 그려 노드 수를 줄인다. */
-export function buildHelmet(cam: CameraConfig = HELMET_CAMERA, detail = 1): Face[] {
+export function buildHelmet(cam: CameraConfig = HELMET_CAMERA): Face[] {
   const faces: Face[] = [];
   const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
     box(faces, cam, x, y, z, w, d, h, c);
@@ -805,7 +804,7 @@ export function buildHelmet(cam: CameraConfig = HELMET_CAMERA, detail = 1): Face
   const VISOR = "#c3c9ce";
   const STRAP = "#a6231f";
 
-  const CELL = 0.8 * detail;
+  const CELL = 0.8;
   const LAYERS = 8;
   const MAX_R = 4.8;
   /** 껍데기 두께 */
@@ -860,11 +859,7 @@ export function buildHelmet(cam: CameraConfig = HELMET_CAMERA, detail = 1): Face
  * 원형은 격자 위에서 반지름 안에 드는 칸만 채워 만든다. 층을 쌓아 도우 → 소스 →
  * 치즈 순으로 올리고, 토핑은 치즈 위에 개별 상자로 얹는다.
  */
-/**
- * @param cell 복셀 한 칸 크기. 키우면 칸 수가 제곱으로 줄어든다 — 150px 썸네일에서는
- *   칸 하나가 육안으로 구분되지 않으므로 굵게 그려도 그림이 같고 노드만 줄어든다.
- */
-export function buildPizza(cam: CameraConfig = PORTRAIT_CAMERA, cell = 1): Face[] {
+export function buildPizza(cam: CameraConfig = PORTRAIT_CAMERA): Face[] {
   const faces: Face[] = [];
   const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
     box(faces, cam, x, y, z, w, d, h, c);
@@ -879,9 +874,9 @@ export function buildPizza(cam: CameraConfig = PORTRAIT_CAMERA, cell = 1): Face[
 
   const R = 5.6;
 
-  disc(B, R, 0, 0.9, DOUGH, cell); // 도우 + 크러스트 테두리
-  disc(B, R - 1.1, 0.9, 0.25, SAUCE, cell); // 소스 링
-  disc(B, R - 2.0, 1.15, 0.2, CHEESE, cell); // 치즈
+  disc(B, R, 0, 0.9, DOUGH); // 도우 + 크러스트 테두리
+  disc(B, R - 1.1, 0.9, 0.25, SAUCE); // 소스 링
+  disc(B, R - 2.0, 1.15, 0.2, CHEESE); // 치즈
 
   // 토핑 — 페퍼로니는 2×2 로 조금 크게, 나머지는 한 칸
   const PEPPERONIS: Array<[number, number]> = [

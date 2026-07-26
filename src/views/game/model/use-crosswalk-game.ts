@@ -35,9 +35,7 @@ export function useCrosswalkGame({ waitSeconds, crossSeconds }: CrosswalkGameOpt
   const [phase, setPhase] = useState<GamePhase>("idle");
   const [dinoY, setDinoY] = useState(DINO_START_Y);
   const [instant, setInstant] = useState(false);
-  const [shake, setShake] = useState(0);
 
-  const pendingGreen = useRef(false);
   const previousPhase = useRef<GamePhase>("idle");
   const phaseRef = useRef<GamePhase>("idle");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -71,12 +69,9 @@ export function useCrosswalkGame({ waitSeconds, crossSeconds }: CrosswalkGameOpt
     haptic("tap");
     setPhase("waiting");
     later(() => {
-      if (phaseRef.current === "waiting") {
-        setPhase("green");
-        playGreenChime();
-      } else if (phaseRef.current === "oops") {
-        pendingGreen.current = true;
-      }
+      if (phaseRef.current !== "waiting") return;
+      setPhase("green");
+      playGreenChime();
     }, waitSeconds * 1000);
   }, [later, playGreenChime, waitSeconds]);
 
@@ -102,30 +97,15 @@ export function useCrosswalkGame({ waitSeconds, crossSeconds }: CrosswalkGameOpt
       haptic("error");
       previousPhase.current = current;
       setPhase("oops");
-      setShake((n) => n + 1);
     }
   }, [crossSeconds, later]);
 
-  /**
-   * 재시도. 기다리는 사이 불이 이미 초록으로 바뀌었으면 그대로 초록에서 재개한다.
-   *
-   * 그 경우를 호출자가 알아야 한다 — 초록에서 재개했는데 신호를 다시 물으면
-   * 답이 이미 정해진 질문이 되고, 무엇을 고르든 walk() 가 성공으로 처리한다.
-   * @returns 초록으로 재개했으면 true
-   */
-  const tryAgain = useCallback((): boolean => {
-    if (pendingGreen.current) {
-      pendingGreen.current = false;
-      setPhase("green");
-      playGreenChime();
-      return true;
-    }
+  /** 재시도 — 실패 직전 단계로 되돌린다 */
+  const tryAgain = useCallback(() => {
     setPhase(previousPhase.current);
-    return false;
-  }, [playGreenChime]);
+  }, []);
 
   const reset = useCallback(() => {
-    pendingGreen.current = false;
     setPhase("idle");
     setDinoY(DINO_START_Y);
     setInstant(true);
@@ -139,7 +119,6 @@ export function useCrosswalkGame({ waitSeconds, crossSeconds }: CrosswalkGameOpt
     isGreen,
     dinoY,
     instant,
-    shake,
     dinoStartY: DINO_START_Y,
     pressButton,
     walk,

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   buildDino,
   buildWavingArm,
+  MOTHER_SHOULDER,
   PORTRAIT_CAMERA,
   projectPoint,
 } from "@/views/game/model/scene";
@@ -27,8 +28,7 @@ const CHILD_CAMERA = { ...PORTRAIT_CAMERA, scale: 1.0 };
 const STAGE_W = 420;
 const STAGE_H = 380;
 
-/** 인사하는 팔이 돌아갈 어깨. 몸을 돌려 세운 아기는 y 가 다르다. */
-const MOTHER_SHOULDER = { x: 3.5, y: 18.3, z: 4.9 };
+/** 아기는 몸을 돌려 세워서 어깨 y 가 다르다. 엄마 쪽은 scene 의 값을 그대로 쓴다. */
 const CHILD_SHOULDER = { x: 3.5, y: 16.9, z: 4.9 };
 
 /**

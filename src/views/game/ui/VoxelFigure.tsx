@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import type { Face } from "@/views/game/model/scene";
 
 /**
@@ -22,7 +23,7 @@ export function VoxelFigure({
   height: number;
   nudge: string;
   className?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }) {
   return (
     <div
