@@ -71,12 +71,12 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
   // 무대를 남은 공간에 맞춰 축소한다. 확대는 하지 않는다(1 이 상한).
   const frameRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const startRef = useRef<HTMLButtonElement>(null);
   const [scale, setScale] = useState(1);
 
-  // 열리자마자 실제 할 일로 포커스를 옮긴다 — 팝업의 Modal 과 같은 규칙.
+  // 버튼이 아니라 화면 자체에 포커스를 둔다 — Modal 과 같은 이유(파란 링이
+  // 처음부터 보이지 않도록). Tab 을 누르면 "Bye, Mum!" 으로 간다.
   useEffect(() => {
-    startRef.current?.focus();
+    frameRef.current?.focus();
   }, []);
 
   useFocusTrap(frameRef);
@@ -102,6 +102,8 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="intro-line"
+      tabIndex={-1}
+      data-focus-shell
       className="intro-frame fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-4"
       style={{
         background: "linear-gradient(#ffe9c2 0%, #ffd7d2 55%, #ffeede 100%)",
@@ -172,7 +174,6 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
         꼬리는 오른쪽 — 채팅에서 내가 보내는 말이 놓이는 자리다.
       */}
       <button
-        ref={startRef}
         type="button"
         onClick={onStart}
         className="speech speech-kid relative min-h-14 shrink-0 rounded-3xl border-4 border-white/90 px-10 py-3 text-xl font-extrabold text-white shadow-[0_8px_0_#2d6119] sm:py-4 sm:text-2xl transition duration-150 hover:-translate-y-1 hover:brightness-110 hover:shadow-[0_12px_0_#2d6119] active:translate-y-1 active:shadow-[0_4px_0_#2d6119]"

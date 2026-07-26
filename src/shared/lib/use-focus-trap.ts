@@ -46,6 +46,13 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>): void {
       if (!inside) {
         event.preventDefault();
         (event.shiftKey ? last : first).focus();
+      } else if (active === el) {
+        // 컨테이너 자신에 포커스가 있는 상태(열린 직후)는 목록 앞이라고 본다.
+        // 앞으로 가는 Tab 은 기본 동작이 첫 요소로 데려가므로 건드리지 않는다.
+        if (event.shiftKey) {
+          event.preventDefault();
+          last.focus();
+        }
       } else if (event.shiftKey && active === first) {
         event.preventDefault();
         last.focus();

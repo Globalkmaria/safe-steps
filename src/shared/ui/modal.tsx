@@ -23,11 +23,15 @@ export function Modal({
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ frame: 0, card: 0 });
 
+  // 첫 버튼이 아니라 다이얼로그 자체에 포커스를 둔다. 버튼에 두면 마우스로 연
+  // 사용자에게도 :focus-visible 이 켜져 파란 링이 처음부터 그려진다 —
+  // 아직 아무것도 고르지 않았는데 하나가 골라진 것처럼 보인다.
+  // 여기 두어도 스크린리더는 다이얼로그를 읽어 주고, Tab 을 누르면 첫 버튼으로 간다.
   useEffect(() => {
-    const first = cardRef.current?.querySelector<HTMLElement>("button");
-    first?.focus();
+    dialogRef.current?.focus();
   }, []);
 
   useFocusTrap(cardRef);
@@ -76,10 +80,13 @@ export function Modal({
             style={{ transform: `scale(${scale})`, transformOrigin: "top center" }}
           >
             <div
+              ref={dialogRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby={labelledBy}
+              tabIndex={-1}
               // 높이는 내용이 정하므로 상하 여백으로 줄인다(폭은 위의 max-w 담당)
+              data-focus-shell
               className="rounded-[2rem] border-8 border-white bg-[#fffdf7] px-4 py-1.5 shadow-[0_18px_0_rgba(30,60,80,.18),0_28px_60px_rgba(20,50,70,.28)] sm:px-6 sm:py-3.5"
               style={{ animation: "ss-pop .35s cubic-bezier(.2,1.4,.5,1) both" }}
             >
