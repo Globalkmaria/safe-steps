@@ -1,4 +1,4 @@
-import { SCENE_CAMERA, box, shade } from "./voxel";
+import { HELMET_SHELL, HELMET_SHELL_TOP, HELMET_VISOR, SCENE_CAMERA, box, shade } from "./voxel";
 import type { CameraConfig, Face } from "./voxel";
 
 /**
@@ -29,6 +29,12 @@ export interface DinoOptions {
   /** 앞치마를 두르고, 인사하는 팔은 따로 그리도록 한쪽을 비운다(엄마 공룡) */
   apron?: { color: string; trim: string };
   /**
+   * 인사하는 팔을 buildWavingArm 으로 따로 그린다 — 몸통에서 그 자리 팔을 뺀다.
+   * 빼지 않으면 팔이 두 개가 된다. apron 과는 별개다: 아기는 앞치마를 안 입지만
+   * 인사는 한다.
+   */
+  wavingArm?: boolean;
+  /**
    * 카메라를 등지게 세운다.
    *
    * 원본 스펙은 -y 를 보고 있고, 기본값은 그것을 뒤집어 +y(카메라 쪽)를 보게 한다.
@@ -42,7 +48,14 @@ export function buildDino(
   cam: CameraConfig = SCENE_CAMERA,
   options: DinoOptions = {},
 ): Face[] {
-  const { withHelmet = false, lift = 0, apron, faceAway = false, helmetOut } = options;
+  const {
+    withHelmet = false,
+    lift = 0,
+    apron,
+    faceAway = false,
+    wavingArm = false,
+    helmetOut,
+  } = options;
   const faces: Face[] = [];
 
   // 원본 모델은 -y 를 향한다. 진행 방향을 왼쪽→오른쪽으로 뒤집었으므로 캐릭터도
@@ -79,8 +92,10 @@ export function buildDino(
   B(3, 1.9, -0.05, 1.9, 0.9, 0.5, "#4c8f2c");
   B(0, 0.7, 1.8, 5, 3.2, 3.9, g); // 몸통
   B(0.5, 0.35, 2.3, 4, 0.45, 2.6, LIGHT); // 배
-  B(-0.6, 1.2, 3.4, 0.8, 1.5, 1.6, g); // 팔
-  const wavingArm = B(4.8, 1.2, 3.4, 0.8, 1.5, 1.6, g);
+  // 인사하는 팔이 서는 자리는 뒤집기에 따라 갈린다. 거울 반전을 하면(엄마) 원본의
+  // +x 팔이 그 자리로 오고, 반전을 끄면(아기) 원본의 -x 팔이 그대로 그 자리다.
+  const nearArm = B(-0.6, 1.2, 3.4, 0.8, 1.5, 1.6, g); // 팔
+  const farArm = B(4.8, 1.2, 3.4, 0.8, 1.5, 1.6, g);
   const head = B(0.2, -0.5, 5.5, 4.6, 3.3, 3.2, g); // 머리
   B(1.05, -1.6, 5.7, 2.9, 1.2, 1.9, LIGHT); // 주둥이
   B(1.3, -1.75, 6.05, 2.4, 0.2, 0.5, "#3c6f22");
@@ -113,8 +128,7 @@ export function buildDino(
   const spanY = minY + maxY;
 
   for (const spec of specs) {
-    // 엄마는 오른팔을 들어 인사하므로 몸통에서 빼고 따로 그린다.
-    if (apron && spec === wavingArm) continue;
+    if (wavingArm && spec === (faceAway ? nearArm : farArm)) continue;
     const [x, y, z, w, d, h, c] = spec;
     const fx = faceAway ? x : spanX - x - w;
     const fy = faceAway ? y : spanY - y - d;
@@ -146,8 +160,8 @@ export function buildDino(
       const HB = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
         box(shell, cam, x, y, z, w, d, h, c);
       const CELL = 0.62;
-      const SHELL = "#c8302c";
-      const SHELL_TOP = "#dc4038";
+      const SHELL = HELMET_SHELL;
+      const SHELL_TOP = HELMET_SHELL_TOP;
 
       // 머리를 덮는 작은 돔 — 정수리에서 아래로 살짝 내려앉게 시작점을 낮춘다
       for (let i = 0; i < 4; i++) {
@@ -164,7 +178,7 @@ export function buildDino(
         }
       }
       // 챙 — 캐릭터가 +y 를 보므로 그쪽에 붙인다
-      HB(cx - 1.7, cy + (faceAway ? -2.1 : 1.7), top - 0.45, 3.4, 0.8, 0.4, "#c3c9ce");
+      HB(cx - 1.7, cy + (faceAway ? -2.1 : 1.7), top - 0.45, 3.4, 0.8, 0.4, HELMET_VISOR);
       // 따로 담았으면 별도의 쌓임 맥락에 그려지므로 자기들끼리 다시 정렬해야 한다.
       if (helmetOut) helmetOut.sort((a, b) => a.dep - b.dep);
     }

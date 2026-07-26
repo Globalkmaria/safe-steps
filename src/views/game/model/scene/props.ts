@@ -1,4 +1,11 @@
-import { HELMET_CAMERA, PORTRAIT_CAMERA, box } from "./voxel";
+import {
+  box,
+  HELMET_CAMERA,
+  HELMET_SHELL,
+  HELMET_SHELL_TOP,
+  HELMET_VISOR,
+  PORTRAIT_CAMERA,
+} from "./voxel";
 import type { CameraConfig, Face } from "./voxel";
 
 /**
@@ -44,9 +51,9 @@ export function buildHelmet(cam: CameraConfig = HELMET_CAMERA): Face[] {
   const B = (x: number, y: number, z: number, w: number, d: number, h: number, c: string) =>
     box(faces, cam, x, y, z, w, d, h, c);
 
-  const SHELL = "#c8302c";
-  const SHELL_TOP = "#dc4038";
-  const VISOR = "#c3c9ce";
+  const SHELL = HELMET_SHELL;
+  const SHELL_TOP = HELMET_SHELL_TOP;
+  const VISOR = HELMET_VISOR;
   const STRAP = "#a6231f";
 
   const CELL = 0.8;

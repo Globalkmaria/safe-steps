@@ -149,14 +149,13 @@ export function shade(hex: string, factor: number): string {
  */
 const GRID_CLASS = "voxel-face";
 
-/** 월드 좌표의 화면상 깊이 */
-export function depth(ex: number, ey: number, ez: number): number {
-  return (
-    Math.sin(CAMERA_THETA) * Math.sin(CAMERA_PHI) * ex +
-    Math.sin(CAMERA_THETA) * Math.cos(CAMERA_PHI) * ey +
-    Math.cos(CAMERA_THETA) * ez
-  );
-}
+/**
+ * 헬멧 색. 캐릭터가 쓰는 헬멧(dino)과 퀴즈 썸네일의 헬멧(props)이 같은 물건이라
+ * 같은 색이어야 한다 — 따로 두면 한쪽만 바꾸고 "고른 것"과 "쓴 것"이 어긋난다.
+ */
+export const HELMET_SHELL = "#c8302c";
+export const HELMET_SHELL_TOP = "#dc4038";
+export const HELMET_VISOR = "#c3c9ce";
 
 /**
  * 월드 좌표 이동량을 화면 픽셀 이동량으로.

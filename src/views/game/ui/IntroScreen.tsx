@@ -42,7 +42,10 @@ const CHILD_SHOULDER = { x: 3.5, y: 16.9, z: 4.9 };
  */
 export function IntroScreen({ onStart }: { onStart: () => void }) {
   const motherBody = useMemo(
-    () => buildDino(MOTHER_COLOR, MOTHER_CAMERA, { apron: { color: APRON, trim: APRON_TRIM } }),
+    () => buildDino(MOTHER_COLOR, MOTHER_CAMERA, {
+        apron: { color: APRON, trim: APRON_TRIM },
+        wavingArm: true,
+      }),
     [],
   );
   const motherArm = useMemo(
@@ -55,7 +58,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
   );
 
   // faceAway 로 뒤집기를 꺼서 원래 향(-y)을 유지한다 → 정면 카메라에서 뒷모습이 된다.
-  const childBody = useMemo(() => buildDino(CHILD_COLOR, CHILD_CAMERA, { faceAway: true }), []);
+  const childBody = useMemo(() => buildDino(CHILD_COLOR, CHILD_CAMERA, { faceAway: true, wavingArm: true }), []);
   const childArm = useMemo(
     () => buildWavingArm(CHILD_COLOR, CHILD_CAMERA, CHILD_SHOULDER),
     [],
