@@ -461,7 +461,10 @@ export function buildDino(
   // 원본 모델은 -y 를 향한다. 진행 방향을 왼쪽→오른쪽으로 뒤집었으므로 캐릭터도
   // 180° 돌려 세워야 뒤로 걷는 것처럼 보이지 않는다. 좌표를 26개 손으로 고치는 대신
   // 상자 목록을 먼저 모아 경계를 재고, 그 중심을 축으로 뒤집는다 — 제자리는 유지된다.
-  const specs: Array<[number, number, number, number, number, number, string]> = [];
+  type Spec = [number, number, number, number, number, number, string];
+  const specs: Spec[] = [];
+  // 넣은 스펙을 그대로 돌려준다. 나중에 머리·팔을 다시 찾아야 하는데, 치수로 찾으면
+  // 디자인을 조금만 바꿔도 조용히 못 찾고 그 기능이 통째로 사라진다.
   const B = (
     x: number,
     y: number,
@@ -470,8 +473,10 @@ export function buildDino(
     d: number,
     h: number,
     c: string,
-  ) => {
-    specs.push([x, y, z, w, d, h, c]);
+  ): Spec => {
+    const spec: Spec = [x, y, z, w, d, h, c];
+    specs.push(spec);
+    return spec;
   };
 
   const g = bodyColor;
@@ -488,8 +493,8 @@ export function buildDino(
   B(0, 0.7, 1.8, 5, 3.2, 3.9, g); // 몸통
   B(0.5, 0.35, 2.3, 4, 0.45, 2.6, LIGHT); // 배
   B(-0.6, 1.2, 3.4, 0.8, 1.5, 1.6, g); // 팔
-  B(4.8, 1.2, 3.4, 0.8, 1.5, 1.6, g);
-  B(0.2, -0.5, 5.5, 4.6, 3.3, 3.2, g); // 머리
+  const wavingArm = B(4.8, 1.2, 3.4, 0.8, 1.5, 1.6, g);
+  const head = B(0.2, -0.5, 5.5, 4.6, 3.3, 3.2, g); // 머리
   B(1.05, -1.6, 5.7, 2.9, 1.2, 1.9, LIGHT); // 주둥이
   B(1.3, -1.75, 6.05, 2.4, 0.2, 0.5, "#3c6f22");
   B(0.85, -0.72, 7.5, 1.1, 0.3, 1.1, "#fdfdf8"); // 눈 흰자
@@ -520,10 +525,10 @@ export function buildDino(
   const spanX = minX + maxX;
   const spanY = minY + maxY;
 
-  for (const [x, y, z, w, d, h, c] of specs) {
+  for (const spec of specs) {
     // 엄마는 오른팔을 들어 인사하므로 몸통에서 빼고 따로 그린다.
-    // 팔은 0.8×1.5×1.6 두 개뿐이라 치수로 구분하고, 그중 x 가 작은 쪽을 뺀다.
-    if (apron && w === 0.8 && d === 1.5 && h === 1.6 && x > 4) continue;
+    if (apron && spec === wavingArm) continue;
+    const [x, y, z, w, d, h, c] = spec;
     const fx = faceAway ? x : spanX - x - w;
     const fy = faceAway ? y : spanY - y - d;
     box(faces, cam, fx + 3.6, fy + DINO_BUILD_Y, z + 1.2 + lift, w, d, h, c);
@@ -544,8 +549,7 @@ export function buildDino(
   if (withHelmet) {
     // 머리 상자를 뒤집은 뒤의 실제 위치에 맞춰 씌운다. 좌표를 손으로 적으면 모델이
     // 바뀔 때 헬멧만 허공에 남으므로, 머리 스펙에서 그때그때 계산한다.
-    const head = specs.find((sp) => sp[3] === 4.6 && sp[4] === 3.3);
-    if (head) {
+    {
       const [hx, hy, hz, hw, hd, hh] = head;
       const cx = (faceAway ? hx : spanX - hx - hw) + 3.6 + hw / 2;
       const cy = (faceAway ? hy : spanY - hy - hd) + DINO_BUILD_Y + hd / 2;

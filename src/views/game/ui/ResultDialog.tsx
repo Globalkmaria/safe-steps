@@ -45,13 +45,13 @@ export function ResultDialog({
           onClick={onAction}
           className={`mt-2 min-h-14 rounded-3xl border-4 border-white/90 px-10 py-4 text-2xl font-extrabold text-white transition duration-150 hover:-translate-y-1 hover:brightness-110 active:translate-y-1 ${
             isSuccess
-              ? "shadow-[0_8px_0_#3b7d21] hover:shadow-[0_12px_0_#3b7d21] active:shadow-[0_4px_0_#3b7d21]"
+              ? "shadow-[0_8px_0_#2d6119] hover:shadow-[0_12px_0_#2d6119] active:shadow-[0_4px_0_#2d6119]"
               : "shadow-[0_8px_0_#245f7e] hover:shadow-[0_12px_0_#245f7e] active:shadow-[0_4px_0_#245f7e]"
           }`}
           style={{
             background: isSuccess
-              ? "linear-gradient(#6fca4a,#4da12c)"
-              : "linear-gradient(#4aa9c9,#2f7fa8)",
+              ? "linear-gradient(#459427,#38761f)"
+              : "linear-gradient(#3a90b3,#2b76a0)",
           }}
         >
           {actionLabel}

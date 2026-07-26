@@ -106,14 +106,22 @@ export function useCrosswalkGame({ waitSeconds, crossSeconds }: CrosswalkGameOpt
     }
   }, [crossSeconds, later]);
 
-  const tryAgain = useCallback(() => {
+  /**
+   * 재시도. 기다리는 사이 불이 이미 초록으로 바뀌었으면 그대로 초록에서 재개한다.
+   *
+   * 그 경우를 호출자가 알아야 한다 — 초록에서 재개했는데 신호를 다시 물으면
+   * 답이 이미 정해진 질문이 되고, 무엇을 고르든 walk() 가 성공으로 처리한다.
+   * @returns 초록으로 재개했으면 true
+   */
+  const tryAgain = useCallback((): boolean => {
     if (pendingGreen.current) {
       pendingGreen.current = false;
       setPhase("green");
       playGreenChime();
-      return;
+      return true;
     }
     setPhase(previousPhase.current);
+    return false;
   }, [playGreenChime]);
 
   const reset = useCallback(() => {

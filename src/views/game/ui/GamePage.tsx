@@ -45,6 +45,8 @@ const HELMET_ON_MS = 2600;
 const DISMOUNT_MS = 1600;
 /** 횡단보도를 벗어나 도로에 들어섰다 되돌아오는 동작이 끝나기까지 */
 const STRAY_MS = 1600;
+/** 재시도 팝업이 뜨기 전에 캐릭터가 인도로 돌아와 있어야 하는 여유 */
+const STRAY_RETURN_LEAD_MS = 400;
 /** 불이 초록으로 바뀐 것을 보고 난 뒤 마지막 질문이 뜨기까지 */
 const GREEN_BEAT_MS = 900;
 
@@ -66,6 +68,27 @@ const BUBBLE_TEXT = {
  */
 type Step = 1 | 2 | 3 | 4;
 
+/**
+ * 지금 떠 있는 화면. 팝업은 언제나 정확히 하나이거나 없다.
+ *
+ * 예전에는 이걸 boolean 11개로 표현했는데, 타입이 "둘 다 true" 를 막아주지 못해
+ * 실제로 재시도 팝업과 성공 팝업이 동시에 뜨는 일이 있었다(aria-modal 이 두 개).
+ * 하나의 값으로 만들면 그 조합 자체가 표현 불가능해진다.
+ */
+type Popup =
+  | "intro"
+  | "gearQuiz"
+  | "gearRetry"
+  | "gearSuccess"
+  | "modeQuiz"
+  | "modeRetry"
+  | "signalQuiz"
+  | "signalRetry"
+  | "placeQuiz"
+  | "placeRetry"
+  | "finish"
+  | "none";
+
 export function GamePage() {
   const game = useCrosswalkGame({
     waitSeconds: WAIT_SECONDS,
@@ -74,30 +97,16 @@ export function GamePage() {
 
   const { phase, isGreen, pressButton, walk, tryAgain, reset } = game;
 
-  /** 인트로 — 엄마의 배웅. 여기서 시작해 스텝 1 로 넘어간다. */
-  const [showIntro, setShowIntro] = useState(true);
+  const [popup, setPopup] = useState<Popup>("intro");
   const [step, setStep] = useState<Step>(1);
 
-  // 스텝 1 — 헬멧
-  const [gearResult, setGearResult] = useState<"retry" | "success" | null>(null);
-  const [showGearSuccess, setShowGearSuccess] = useState(false);
+  // 씬 위 캐릭터의 상태. 팝업과는 다른 축이다 — 헬멧은 스텝 2~4 내내 쓴 채로 있다.
   const [wearsHelmet, setWearsHelmet] = useState(false);
   const [helmetInHand, setHelmetInHand] = useState(false);
-
-  // 스텝 2 — 타고 갈까 끌고 갈까
-  const [showModeQuiz, setShowModeQuiz] = useState(false);
-  const [modeRetry, setModeRetry] = useState(false);
   const [dismounted, setDismounted] = useState(false);
-
-  // 스텝 3 — 신호
-  const [showSignalQuiz, setShowSignalQuiz] = useState(false);
-  const [showSignalRetry, setShowSignalRetry] = useState(false);
-
-  // 스텝 4 — 어디로 건널까
-  const [showPlaceQuiz, setShowPlaceQuiz] = useState(false);
-  const [placeRetry, setPlaceRetry] = useState(false);
   const [strayed, setStrayed] = useState(false);
-  const [showFinish, setShowFinish] = useState(false);
+  /** 무단횡단 연출을 다시 돌릴 때마다 증가 — 타이머 useEffect 의 트리거 */
+  const [strayRun, setStrayRun] = useState(0);
 
   /** 신호가 초록이 되면 스스로 건넌다 — 아이에게 같은 판단을 두 번 시키지 않는다 */
   const [autoCross, setAutoCross] = useState(false);
@@ -108,19 +117,19 @@ export function GamePage() {
 
   // 스텝 1: 손에 든 헬멧을 머리에 쓰는 동작을 보여준 뒤 축하 팝업.
   useEffect(() => {
-    if (gearResult !== "success") return;
+    if (!wearsHelmet) return;
     const lift = setTimeout(() => setHelmetInHand(false), HELMET_LIFT_MS);
-    const done = setTimeout(() => setShowGearSuccess(true), HELMET_ON_MS);
+    const done = setTimeout(() => setPopup("gearSuccess"), HELMET_ON_MS);
     return () => {
       clearTimeout(lift);
       clearTimeout(done);
     };
-  }, [gearResult]);
+  }, [wearsHelmet]);
 
   // 스텝 3: 내리는 동작이 끝나면 신호를 묻는다.
   useEffect(() => {
     if (step !== 3) return;
-    const t = setTimeout(() => setShowSignalQuiz(true), DISMOUNT_MS);
+    const t = setTimeout(() => setPopup("signalQuiz"), DISMOUNT_MS);
     return () => clearTimeout(t);
   }, [step]);
 
@@ -130,32 +139,46 @@ export function GamePage() {
     // 불이 바뀌는 순간을 눈으로 확인할 틈을 준 뒤 묻는다.
     const t = setTimeout(() => {
       setStep(4);
-      setShowPlaceQuiz(true);
+      setPopup("placeQuiz");
     }, GREEN_BEAT_MS);
     return () => clearTimeout(t);
   }, [step, phase]);
 
   // 빨간불에 나서려다 멈추는 동작을 다 보여준 뒤 실패 팝업.
+  // 스텝을 조건에 넣는다 — 예전에는 렌더에서만 걸러서, 다른 스텝의 oops 가
+  // 보이지 않는 상태로 예약돼 있었다.
   useEffect(() => {
-    if (phase !== "oops") return;
-    const t = setTimeout(() => setShowSignalRetry(true), ABORT_MS);
+    if (phase !== "oops" || step !== 3) return;
+    const t = setTimeout(() => setPopup("signalRetry"), ABORT_MS);
     return () => clearTimeout(t);
-  }, [phase]);
+  }, [phase, step]);
 
   // 다 건너면 축하 연출을 보여준 뒤 마무리 팝업.
   useEffect(() => {
-    if (phase !== "success") return;
-    const t = setTimeout(() => setShowFinish(true), CELEBRATE_MS);
+    if (phase !== "success" || step !== 4) return;
+    const t = setTimeout(() => setPopup("finish"), CELEBRATE_MS);
     return () => clearTimeout(t);
-  }, [phase]);
+  }, [phase, step]);
+
+  // 무단횡단 — 도로로 나섰다 되돌아온 뒤 다시 묻는다.
+  // 타이머를 핸들러가 아니라 여기서 잡아야 언마운트 시 정리된다.
+  useEffect(() => {
+    if (strayRun === 0) return;
+    const back = setTimeout(() => setStrayed(false), STRAY_MS - STRAY_RETURN_LEAD_MS);
+    const ask = setTimeout(() => setPopup("placeRetry"), STRAY_MS);
+    return () => {
+      clearTimeout(back);
+      clearTimeout(ask);
+    };
+  }, [strayRun]);
 
   /** 스텝 1 — 헬멧을 고르면 쓰고 자전거에 오른다 */
   const handleGearChoice = (picked: BikeChoice) => {
     if (picked !== "helmet") {
-      setGearResult("retry");
+      setPopup("gearRetry");
       return;
     }
-    setGearResult("success");
+    setPopup("none");
     // 헬멧은 손에 든 채로 먼저 나타난다. 위 useEffect 가 곧 머리로 올린다.
     setHelmetInHand(true);
     setWearsHelmet(true);
@@ -163,11 +186,11 @@ export function GamePage() {
 
   /** 스텝 2 — 내려서 끌고 가야 정답 */
   const handleModeChoice = (mode: CrossingMode) => {
-    setShowModeQuiz(false);
     if (mode === "ride") {
-      setModeRetry(true);
+      setPopup("modeRetry");
       return;
     }
+    setPopup("none");
     setDismounted(true);
     setStep(3);
   };
@@ -177,47 +200,42 @@ export function GamePage() {
    * 어디로 건널지는 다음 스텝에서 묻는다.
    */
   const handleSignalChoice = (picked: SignalChoice) => {
-    setShowSignalQuiz(false);
+    setPopup("none");
     if (picked === "green") pressButton();
     else walk();
   };
 
   /** 스텝 4 — 횡단보도로 건너야 정답. 무단횡단은 도로에 들어섰다가 되돌아온다. */
   const handlePlaceChoice = (place: CrossingPlace) => {
-    setShowPlaceQuiz(false);
+    setPopup("none");
     if (place === "crossing") {
       setAutoCross(true); // 불은 이미 초록이라 곧바로 건너기 시작한다
       return;
     }
     setStrayed(true);
-    setTimeout(() => setStrayed(false), STRAY_MS - 400);
-    setTimeout(() => setPlaceRetry(true), STRAY_MS);
+    setStrayRun((n) => n + 1);
   };
 
+  /**
+   * 재시도 — 기다리는 사이 불이 이미 초록으로 바뀌었을 수 있다.
+   * 그때 신호를 다시 물으면 답이 이미 정해진 질문이 되고, 무엇을 고르든
+   * 초록불 상태의 walk() 가 곧바로 성공으로 처리해 버린다. 그래서 되묻지 않는다.
+   */
   const handleSignalRetry = () => {
-    setShowSignalRetry(false);
     setAutoCross(false);
-    tryAgain();
-    setShowSignalQuiz(true);
+    const resumedOnGreen = tryAgain();
+    setPopup(resumedOnGreen ? "none" : "signalQuiz");
   };
 
   /** 처음부터 다시 — 씬과 팝업 상태를 모두 되돌린다 */
   const handleRestartAll = () => {
-    setShowIntro(true);
+    setPopup("intro");
     setStep(1);
-    setGearResult(null);
-    setShowGearSuccess(false);
     setWearsHelmet(false);
     setHelmetInHand(false);
-    setShowModeQuiz(false);
-    setModeRetry(false);
     setDismounted(false);
-    setShowSignalQuiz(false);
-    setShowSignalRetry(false);
-    setShowPlaceQuiz(false);
-    setPlaceRetry(false);
     setStrayed(false);
-    setShowFinish(false);
+    setStrayRun(0);
     setAutoCross(false);
     reset();
   };
@@ -230,7 +248,12 @@ export function GamePage() {
         background: "linear-gradient(#8fd0f5 0%, #b9e4f7 52%, #d8f0e2 100%)",
       }}
     >
+      {/*
+        팝업이 떠 있는 동안 배경은 통째로 비활성이다. 없으면 Shift+Tab 한 번으로
+        모달 밖 씬에 도달할 수 있어, 키보드 사용자에게는 모달이 모달이 아니게 된다.
+      */}
       <main
+        inert={popup !== "none"}
         className="relative mx-auto flex h-dvh w-full max-w-[1024px] flex-col"
       >
         <div className="min-h-0 flex-1">
@@ -246,7 +269,6 @@ export function GamePage() {
             showSchool={step === 4}
             strayed={strayed}
             crossSeconds={CROSS_SECONDS}
-            onWalk={walk}
           />
         </div>
 
@@ -258,24 +280,22 @@ export function GamePage() {
         </p>
       </main>
 
-      {showIntro && <IntroScreen onStart={() => setShowIntro(false)} />}
+      {popup === "intro" && <IntroScreen onStart={() => setPopup("gearQuiz")} />}
 
       {/* --- 스텝 1: 자전거를 탈 때 챙길 것 --- */}
-      {!showIntro && step === 1 && gearResult === null && (
-        <BikeQuiz onSelect={handleGearChoice} />
-      )}
+      {popup === "gearQuiz" && <BikeQuiz onSelect={handleGearChoice} />}
 
-      {step === 1 && gearResult === "retry" && (
+      {popup === "gearRetry" && (
         <ResultDialog
           tone="retry"
           title="Pizza is not safety gear!"
           message="A snack will not protect your head. Try again and pick the thing that keeps you safe."
           actionLabel="Try again"
-          onAction={() => setGearResult(null)}
+          onAction={() => setPopup("gearQuiz")}
         />
       )}
 
-      {step === 1 && showGearSuccess && (
+      {popup === "gearSuccess" && (
         <ResultDialog
           tone="success"
           title="Helmet on — well done!"
@@ -283,35 +303,31 @@ export function GamePage() {
           actionLabel="Next"
           onAction={() => {
             // 자전거 탄 모습은 이 팝업이 뜨기 전에 이미 보여줬으므로 곧바로 다음 질문으로.
-            setShowGearSuccess(false);
             setStep(2);
-            setShowModeQuiz(true);
+            setPopup("modeQuiz");
           }}
         />
       )}
 
       {/* --- 스텝 2: 타고 갈까, 내려서 끌고 갈까 --- */}
-      {step === 2 && showModeQuiz && (
+      {popup === "modeQuiz" && (
         <CrossingModeQuiz bodyColor={DINO_COLOR} onSelect={handleModeChoice} />
       )}
 
-      {step === 2 && modeRetry && (
+      {popup === "modeRetry" && (
         <ResultDialog
           tone="retry"
           title="Do not ride across!"
           message="Riding across is risky — drivers see you late and you cannot stop quickly. Get off and walk your bike."
           actionLabel="Try again"
-          onAction={() => {
-            setModeRetry(false);
-            setShowModeQuiz(true);
-          }}
+          onAction={() => setPopup("modeQuiz")}
         />
       )}
 
       {/* --- 스텝 3: 어느 불에 건널까 --- */}
-      {step === 3 && showSignalQuiz && <SignalQuiz onSelect={handleSignalChoice} />}
+      {popup === "signalQuiz" && <SignalQuiz onSelect={handleSignalChoice} />}
 
-      {step === 3 && showSignalRetry && (
+      {popup === "signalRetry" && (
         <ResultDialog
           tone="retry"
           title="That was the red light!"
@@ -322,24 +338,21 @@ export function GamePage() {
       )}
 
       {/* --- 스텝 4: 어디로 건널까 --- */}
-      {step === 4 && showPlaceQuiz && (
+      {popup === "placeQuiz" && (
         <WhereToCrossQuiz bodyColor={DINO_COLOR} onSelect={handlePlaceChoice} />
       )}
 
-      {step === 4 && placeRetry && (
+      {popup === "placeRetry" && (
         <ResultDialog
           tone="retry"
           title="Not there!"
           message="Stepping straight into the road is dangerous. Drivers do not expect you there. Use the crossing."
           actionLabel="Try again"
-          onAction={() => {
-            setPlaceRetry(false);
-            setShowPlaceQuiz(true);
-          }}
+          onAction={() => setPopup("placeQuiz")}
         />
       )}
 
-      {step === 4 && showFinish && (
+      {popup === "finish" && (
         <ResultDialog
           tone="success"
           title="You made it to school!"

@@ -20,8 +20,8 @@ export function HomePage() {
       <Link
         href={ROUTES.game}
         onClick={unlockAudio}
-        className="min-h-14 rounded-3xl border-4 border-white/90 px-10 py-4 text-2xl font-extrabold text-white shadow-[0_8px_0_#3b7d21] transition duration-150 hover:-translate-y-1 hover:brightness-110 hover:shadow-[0_12px_0_#3b7d21] active:translate-y-1 active:shadow-[0_4px_0_#3b7d21]"
-        style={{ background: "linear-gradient(#6fca4a,#4da12c)" }}
+        className="min-h-14 rounded-3xl border-4 border-white/90 px-10 py-4 text-2xl font-extrabold text-white shadow-[0_8px_0_#2d6119] transition duration-150 hover:-translate-y-1 hover:brightness-110 hover:shadow-[0_12px_0_#2d6119] active:translate-y-1 active:shadow-[0_4px_0_#2d6119]"
+        style={{ background: "linear-gradient(#459427,#38761f)" }}
       >
         Start learning
       </Link>

@@ -66,7 +66,13 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
 
   // 무대를 남은 공간에 맞춰 축소한다. 확대는 하지 않는다(1 이 상한).
   const stageRef = useRef<HTMLDivElement>(null);
+  const startRef = useRef<HTMLButtonElement>(null);
   const [scale, setScale] = useState(1);
+
+  // 열리자마자 실제 할 일로 포커스를 옮긴다 — 팝업의 Modal 과 같은 규칙.
+  useEffect(() => {
+    startRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     const el = stageRef.current;
@@ -81,7 +87,13 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
   }, []);
 
   return (
+    // 전면을 덮으므로 팝업과 같은 규칙을 따라야 한다. 없으면 DOM 순서상 뒤에 깔린
+    // 씬이 먼저 오기 때문에, 키보드 사용자가 Tab 을 처음 눌렀을 때 "Bye, Mum!" 이 아니라
+    // 씬 쪽으로 포커스가 간다.
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="intro-line"
       className="intro-frame fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-4"
       style={{
         background: "linear-gradient(#ffe9c2 0%, #ffd7d2 55%, #ffeede 100%)",
@@ -142,7 +154,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
       {/* 읽는 것과 누르는 것 사이에 숨을 둔다 — 붙어 있으면 한 덩어리로 읽힌다 */}
       <div className="intro-side flex shrink-0 flex-col items-center gap-5">
       {/* 엄마의 대사 — 꼬리가 왼쪽에서 나온다(받은 말) */}
-      <p className="speech speech-mum shrink-0 rounded-[2rem] border-4 border-white bg-[#fffdf7] px-6 py-3 text-center font-[family-name:var(--font-baloo)] text-2xl font-extrabold text-slate-800 shadow-[0_10px_0_rgba(30,60,80,.16)] sm:border-8 sm:px-8 sm:py-5 sm:text-3xl">
+      <p id="intro-line" className="speech speech-mum shrink-0 rounded-[2rem] border-4 border-white bg-[#fffdf7] px-6 py-3 text-center font-[family-name:var(--font-baloo)] text-2xl font-extrabold text-slate-800 shadow-[0_10px_0_rgba(30,60,80,.16)] sm:border-8 sm:px-8 sm:py-5 sm:text-3xl">
         Have a good day at school!
       </p>
 
@@ -152,15 +164,16 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
         꼬리는 오른쪽 — 채팅에서 내가 보내는 말이 놓이는 자리다.
       */}
       <button
+        ref={startRef}
         type="button"
         onClick={onStart}
-        className="speech speech-kid relative min-h-14 shrink-0 rounded-3xl border-4 border-white/90 px-10 py-3 text-xl font-extrabold text-white shadow-[0_8px_0_#3b7d21] sm:py-4 sm:text-2xl transition duration-150 hover:-translate-y-1 hover:brightness-110 hover:shadow-[0_12px_0_#3b7d21] active:translate-y-1 active:shadow-[0_4px_0_#3b7d21]"
-        style={{ background: "linear-gradient(#6fca4a,#4da12c)" }}
+        className="speech speech-kid relative min-h-14 shrink-0 rounded-3xl border-4 border-white/90 px-10 py-3 text-xl font-extrabold text-white shadow-[0_8px_0_#2d6119] sm:py-4 sm:text-2xl transition duration-150 hover:-translate-y-1 hover:brightness-110 hover:shadow-[0_12px_0_#2d6119] active:translate-y-1 active:shadow-[0_4px_0_#2d6119]"
+        style={{ background: "linear-gradient(#459427,#38761f)" }}
       >
         {/* 버튼 안에 두어야 hover·active 로 버튼이 움직일 때 링도 같이 따라간다 */}
         <span
           aria-hidden
-          className="pointer-events-none absolute -inset-1 rounded-[1.75rem] border-4 border-[#4da12c]"
+          className="pointer-events-none absolute -inset-1 rounded-[1.75rem] border-4 border-[#38761f]"
           style={{ animation: "ss-tap-ring 2s ease-out infinite" }}
         />
         Bye, Mum!

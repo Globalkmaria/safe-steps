@@ -45,7 +45,6 @@ interface CrosswalkSceneProps {
   /** 무단횡단 — 횡단보도를 벗어나 도로로 들어섰다가 되돌아온다 */
   strayed?: boolean;
   crossSeconds: number;
-  onWalk: () => void;
 }
 
 /**
@@ -65,7 +64,6 @@ export function CrosswalkScene({
   showSchool = false,
   strayed = false,
   crossSeconds,
-  onWalk,
 }: CrosswalkSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -172,7 +170,9 @@ export function CrosswalkScene({
   };
 
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden">
+    // 씬은 통째로 장식이다 — 글자도 이미지도 없는 수백 개의 div 이고, 지금 무슨 일이
+    // 벌어지는지는 옆의 role="status" 문구가 말해준다. 보조기술에는 그쪽만 남긴다.
+    <div aria-hidden ref={containerRef} className="relative h-full w-full overflow-hidden">
       <div
         className="absolute left-1/2 top-1/2"
         style={{
@@ -221,18 +221,19 @@ export function CrosswalkScene({
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={onWalk}
-                aria-label={isGreen ? "Cross the road now" : "Try to cross the road"}
+              {/*
+                예전에는 이 자리가 캐릭터를 직접 누르는 버튼이었다. 지금 이야기에서는
+                모든 판단을 팝업으로 묻기 때문에 이 탭이 답해야 할 질문이 없는데,
+                버튼은 팝업이 없는 구간(불이 바뀌길 기다리는 0.6초, 무단횡단 연출 1.6초)에도
+                살아 있었다. 그 틈에 누르면 walk() 가 "지금 어떤 질문에 답하는 중인지"
+                모른 채 phase 만 보고 성공 처리를 해 버려서, 빨간불을 고르고도
+                "Great job!" 이 뜨거나 재시도 팝업과 성공 팝업이 함께 뜨는 일이 있었다.
+              */}
+              <div
                 style={{
                   position: "absolute",
                   left: 0,
                   top: 0,
-                  background: "transparent",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
                   transform: `translate(${delta.dx}px,${delta.dy}px)`,
                   transition: instant ? "none" : `transform ${crossSeconds}s linear`,
                 }}
@@ -281,7 +282,7 @@ export function CrosswalkScene({
                   </div>
                 </div>
                 </div>
-              </button>
+              </div>
             </div>
           </div>
 
