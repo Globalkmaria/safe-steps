@@ -1,18 +1,77 @@
 # Safe Steps 🚸🧒
 
-Made with love by Maria, Rufina & Yejin @ Builders Only 2 
+Made with love by Maria, Rufina & Yejin @ Builders Only 2
 
-**세계의 모든 어린이가 안전하게 길을 건널 수 있도록 만들었습니다.**
 **Built so that children everywhere can cross the road safely.**
+**세계의 모든 어린이가 안전하게 길을 건널 수 있도록 만들었습니다.**
 
-### ▶︎ [지금 해보기 / Play now](https://safe-steps-jet.vercel.app/game)
+### ▶︎ [Play now / 지금 해보기](https://safe-steps-jet.vercel.app/game)
 
-> 화면의 가로가 세로보다 길어야 합니다. 세로로 긴 화면에서는 돌려 달라는 안내가 나옵니다.
 > Needs a window wider than it is tall — a tall screen asks you to rotate it instead.
+> 화면의 가로가 세로보다 길어야 합니다. 세로로 긴 화면에서는 돌려 달라는 안내가 나옵니다.
 
-[한국어](#한국어) · [English](#english)
+[English](#english) · [한국어](#한국어)
 
-![인트로 — 엄마 공룡의 배웅](docs/images/01-intro.png)
+![The intro — mum waving goodbye](docs/images/01-intro.png)
+
+---
+
+## English
+
+### Why
+
+Road safety is taught to children with posters and lectures. "Stop at the red light."
+Children memorise the words. But **knowing the words and making the judgement at the kerb
+are two different things.**
+
+And a dangerous judgement is one you cannot practise. Getting it wrong once is once too many.
+
+Safe Steps is **a place where getting it wrong is safe.**
+
+### What makes it different
+
+**A wrong answer is a scene, not a penalty.**
+
+Choose to cross on red and no message tells you that you were wrong. The character steps into
+the road, stops, and pulls back. Why it was dangerous stays with the child **as something they
+watched**, not as a sentence they read.
+
+![Where do you cross — each choice acts out what it means](docs/images/02-quiz.png)
+
+Choices are shown as motion rather than described in words, so a child who cannot yet read the
+labels can still tell the two options apart.
+
+### How it goes
+
+One morning walk to school, starting with mum waving goodbye. Four decisions:
+
+1. **What do you take when you ride?** — pizza or helmet
+2. **Ride across, or get off and walk?**
+3. **Which light do you cross on?** — green or red
+4. **Where do you cross?** — straight across, or on the crossing
+
+Get all four right and you arrive at the school across the road.
+
+![Walking the bike across the crossing](docs/images/03-crossing.png)
+
+### How it is built
+
+Everything on screen — the road, the signal, the character, the bike, the school — is voxels
+drawn with CSS 3D transforms. No 3D library, no character image files. That is why recolouring
+the character or putting a helmet on it is a line of code rather than a redrawn sprite.
+
+### Running it
+
+A deployed copy lives at **<https://safe-steps-jet.vercel.app/game>**. To run it yourself:
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`. The game lays out in three columns, so it **needs a window wider
+than it is tall**. On a tall screen it asks you to rotate the device or widen the window
+instead.
 
 ---
 
@@ -69,61 +128,6 @@ npm run dev
 
 `http://localhost:3000` 을 엽니다. 게임 화면이 좌·중앙·우 3열이라 **가로가 세로보다 길어야**
 동작합니다. 세로로 긴 화면에서는 화면을 돌리거나 창을 넓혀 달라는 안내가 대신 나옵니다.
-
----
-
-## English
-
-### Why
-
-Road safety is taught to children with posters and lectures. "Stop at the red light."
-Children memorise the words. But **knowing the words and making the judgement at the kerb
-are two different things.**
-
-And a dangerous judgement is one you cannot practise. Getting it wrong once is once too many.
-
-Safe Steps is **a place where getting it wrong is safe.**
-
-### What makes it different
-
-**A wrong answer is a scene, not a penalty.**
-
-Choose to cross on red and no message tells you that you were wrong. The character steps into
-the road, stops, and pulls back. Why it was dangerous stays with the child **as something they
-watched**, not as a sentence they read.
-
-Choices are shown as motion rather than described in words, so a child who cannot yet read the
-labels can still tell the two options apart.
-
-### How it goes
-
-One morning walk to school, starting with mum waving goodbye. Four decisions:
-
-1. **What do you take when you ride?** — pizza or helmet
-2. **Ride across, or get off and walk?**
-3. **Which light do you cross on?** — green or red
-4. **Where do you cross?** — straight across, or on the crossing
-
-Get all four right and you arrive at the school across the road.
-
-### How it is built
-
-Everything on screen — the road, the signal, the character, the bike, the school — is voxels
-drawn with CSS 3D transforms. No 3D library, no character image files. That is why recolouring
-the character or putting a helmet on it is a line of code rather than a redrawn sprite.
-
-### Running it
-
-A deployed copy lives at **<https://safe-steps-jet.vercel.app/game>**. To run it yourself:
-
-```bash
-npm install
-npm run dev
-```
-
-Open `http://localhost:3000`. The game lays out in three columns, so it **needs a window wider
-than it is tall**. On a tall screen it asks you to rotate the device or widen the window
-instead.
 
 ---
 
