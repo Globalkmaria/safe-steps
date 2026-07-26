@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useFocusTrap } from "@/shared/lib/use-focus-trap";
 import {
   buildDino,
   buildWavingArm,
@@ -65,6 +66,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
   );
 
   // 무대를 남은 공간에 맞춰 축소한다. 확대는 하지 않는다(1 이 상한).
+  const frameRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const startRef = useRef<HTMLButtonElement>(null);
   const [scale, setScale] = useState(1);
@@ -73,6 +75,8 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
   useEffect(() => {
     startRef.current?.focus();
   }, []);
+
+  useFocusTrap(frameRef);
 
   useEffect(() => {
     const el = stageRef.current;
@@ -91,6 +95,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
     // 씬이 먼저 오기 때문에, 키보드 사용자가 Tab 을 처음 눌렀을 때 "Bye, Mum!" 이 아니라
     // 씬 쪽으로 포커스가 간다.
     <div
+      ref={frameRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="intro-line"

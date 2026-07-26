@@ -239,7 +239,11 @@ export function GamePage() {
         background: "linear-gradient(#8fd0f5 0%, #b9e4f7 52%, #d8f0e2 100%)",
       }}
     >
-      {/* 팝업 중 배경 비활성 — 없으면 Shift+Tab 으로 모달 밖 씬에 닿는다 */}
+      {/*
+        팝업 중 배경 비활성. 씬에는 포커스 가능한 요소가 없어 Tab 으로는 어차피 못 닿지만,
+        스크린리더의 스와이프·로터 탐색은 Tab 순서를 따르지 않는다 — 이게 없으면 팝업이
+        떠 있는 동안 아래 상태 문구를 만나 맥락에 안 맞는 안내를 듣게 된다.
+      */}
       <main
         inert={popup !== "none"}
         className="relative mx-auto flex h-dvh w-full max-w-[1024px] flex-col"

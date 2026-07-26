@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { useFocusTrap } from "@/shared/lib/use-focus-trap";
 
 /**
  * 화면 전체를 덮는 단순한 대화상자.
@@ -28,6 +29,8 @@ export function Modal({
     const first = cardRef.current?.querySelector<HTMLElement>("button");
     first?.focus();
   }, []);
+
+  useFocusTrap(cardRef);
 
   useEffect(() => {
     const frame = frameRef.current;
